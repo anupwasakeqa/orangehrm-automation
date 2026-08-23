@@ -10,15 +10,44 @@ public final class ConfigReader {
 
     static {
 
+        loadProperties("config.properties");
+
+        String environment = PROPERTIES.getProperty("environment");
+
+        if (environment == null || environment.trim().isEmpty()) {
+
+            throw new RuntimeException(
+                    "Environment is missing in config.properties."
+            );
+        }
+
+        String environmentConfig =
+                "config/" + environment.trim().toLowerCase() + ".properties";
+
+        loadProperties(environmentConfig);
+    }
+
+    private ConfigReader() {
+
+        // Utility class - prevent object creation
+    }
+
+    // ============================================================
+    // LOAD PROPERTIES
+    // ============================================================
+
+    private static void loadProperties(String resourcePath) {
+
         try (InputStream inputStream =
                      ConfigReader.class
                              .getClassLoader()
-                             .getResourceAsStream("config.properties")) {
+                             .getResourceAsStream(resourcePath)) {
 
             if (inputStream == null) {
 
                 throw new RuntimeException(
-                        "config.properties not found in src/test/resources."
+                        "Configuration file not found: "
+                                + resourcePath
                 );
             }
 
@@ -27,15 +56,11 @@ public final class ConfigReader {
         } catch (IOException e) {
 
             throw new RuntimeException(
-                    "Unable to load config.properties.",
+                    "Unable to load configuration file: "
+                            + resourcePath,
                     e
             );
         }
-    }
-
-    private ConfigReader() {
-
-        // Utility class - prevent object creation
     }
 
     // ============================================================
