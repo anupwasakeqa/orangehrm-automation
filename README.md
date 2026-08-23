@@ -1,6 +1,6 @@
 # OrangeHRM Automation Framework
 
-[![GitHub Actions](https://github.com/anupwasakeqa/orangehrm-automation/actions/workflows/maven.yml/badge.svg)](https://github.com/anupwasakeqa/orangehrm-automation/actions)
+[![GitHub Actions](https://github.com/anupwasakeqa/orangehrm-automation/actions/workflows/orangehrm-tests.yml/badge.svg)](https://github.com/anupwasakeqa/orangehrm-automation/actions)
 
 A Selenium-based test automation framework for the OrangeHRM application, built using Java, Selenium WebDriver, TestNG, Maven, REST Assured, and Page Object Model.
 
@@ -86,7 +86,7 @@ orangehrm-automation
 │
 ├── .github
 │   └── workflows
-│       └── maven.yml
+│       └── orangehrm-tests.yml
 │
 ├── src
 │   ├── main
