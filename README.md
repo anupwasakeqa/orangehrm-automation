@@ -86,7 +86,7 @@ orangehrm-automation
 │
 ├── .github
 │   └── workflows
-│       └── GitHub Actions workflow
+│       └── maven.yml
 │
 ├── src
 │   ├── main
