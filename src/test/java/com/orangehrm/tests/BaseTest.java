@@ -186,9 +186,47 @@ public class BaseTest {
         ChromeOptions options =
                 new ChromeOptions();
 
-        options.addArguments(
-                "--start-maximized"
-        );
+        // ========================================================
+        // GITHUB ACTIONS / CI CONFIGURATION
+        // ========================================================
+
+        String ci =
+                System.getenv("CI");
+
+        if ("true".equalsIgnoreCase(ci)) {
+
+            System.out.println(
+                    "CI environment detected."
+            );
+
+            System.out.println(
+                    "Running Chrome in headless mode."
+            );
+
+            options.addArguments(
+                    "--headless=new"
+            );
+
+            options.addArguments(
+                    "--no-sandbox"
+            );
+
+            options.addArguments(
+                    "--disable-dev-shm-usage"
+            );
+
+            options.addArguments(
+                    "--disable-gpu"
+            );
+
+            options.addArguments(
+                    "--window-size=1920,1080"
+            );
+        }
+
+        // ========================================================
+        // COMMON CHROME OPTIONS
+        // ========================================================
 
         options.addArguments(
                 "--disable-notifications"
