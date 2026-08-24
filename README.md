@@ -4,7 +4,7 @@
 
 A Selenium-based test automation framework for the **OrangeHRM application**, built using **Java, Selenium WebDriver, TestNG, Maven, REST Assured, and Page Object Model (POM)**.
 
-The framework supports both **local test execution** and **CI execution through GitHub Actions**, with automated test reporting, failure screenshots, retry handling, video recording, and CI artifacts.
+The framework supports both **local test execution** and **CI execution through GitHub Actions**, with automated test reporting, failure screenshots, retry handling, and test artifacts.
 
 ---
 
@@ -20,7 +20,7 @@ The framework is designed with a focus on:
 * Failure diagnostics
 * CI/CD execution
 * HTML test reporting
-* API and UI validation
+* Performance testing
 
 ### Key Features
 
@@ -35,7 +35,6 @@ The framework is designed with a focus on:
 * Headless Chrome execution in GitHub Actions
 * Extent HTML reporting
 * Automatic failure screenshot capture
-* Test execution video recording
 * Retry mechanism for failed tests
 * Smart explicit wait utilities
 * Failure URL and page title logging
@@ -43,36 +42,38 @@ The framework is designed with a focus on:
 * Git and GitHub version control
 * GitHub Actions CI automation
 * Automatic test execution on repository changes
-* CI test reports and execution artifacts
+* CI test report and screenshot artifacts
+* k6 performance testing
 
 ---
 
 ## Application Under Test
 
-| Property | Details |
-|----------|---------|
-| **Application** | OrangeHRM Open Source Demo |
-| **Base URL** | https://opensource-demo.orangehrmlive.com |
-| **Environment** | QA |
-| **Browser** | Chrome |
+| Property        | Details                                   |
+| --------------- | ----------------------------------------- |
+| **Application** | OrangeHRM Open Source Demo                |
+| **Base URL**    | https://opensource-demo.orangehrmlive.com |
+| **Environment** | QA                                        |
+| **Browser**     | Chrome                                    |
 
 ---
 
 ## Tech Stack
 
-| Technology | Purpose |
-|------------|---------|
-| Java 17 | Programming language |
-| Selenium WebDriver | UI automation |
-| TestNG | Test framework and execution |
-| Maven | Build and dependency management |
-| REST Assured | API automation |
-| Jackson | JSON processing |
-| Extent Reports | HTML test reporting |
-| Git | Version control |
-| GitHub | Source code repository |
-| GitHub Actions | CI/CD automation |
-| Eclipse | Development IDE |
+| Technology         | Purpose                         |
+| ------------------ | ------------------------------- |
+| Java 17            | Programming language            |
+| Selenium WebDriver | UI automation                   |
+| TestNG             | Test framework and execution    |
+| Maven              | Build and dependency management |
+| REST Assured       | API automation                  |
+| Jackson            | JSON processing                 |
+| Extent Reports     | HTML test reporting             |
+| Git                | Version control                 |
+| GitHub             | Source code repository          |
+| GitHub Actions     | CI/CD automation                |
+| k6                | Performance testing             |
+| Eclipse             | Development IDE                 |
 
 ---
 
@@ -91,6 +92,7 @@ The framework follows the **Page Object Model (POM)** design pattern.
 * **Utilities** – Provide reusable automation functions and smart waits
 * **TestNG Suite** – Controls test execution
 * **GitHub Actions** – Executes automated tests in CI
+* **k6 Scripts** – Execute performance and load testing scenarios
 
 ---
 
@@ -110,8 +112,6 @@ The framework uses a custom TestNG `RetryAnalyzer` to handle transient test fail
 
 This helps identify whether a failure is transient or consistently reproducible.
 
----
-
 ### Smart Waiting
 
 The framework uses reusable explicit wait utilities to synchronize test execution with the application state.
@@ -129,8 +129,6 @@ The `WaitUtils` utility provides:
 
 Page Objects use these wait mechanisms to reduce timing-related failures and improve test execution reliability.
 
----
-
 ### Failure Screenshot Capture
 
 When a test fails, the TestNG listener automatically captures failure evidence.
@@ -146,24 +144,6 @@ The failure handling process includes:
 
 Screenshots are timestamped to make individual test executions easier to identify and troubleshoot.
 
----
-
-### Test Execution Video Recording
-
-The framework supports browser test execution video recording.
-
-Videos provide additional evidence for:
-
-* Test execution flow
-* UI failures
-* Timing-related issues
-* CI debugging
-* Failure investigation
-
-Videos are uploaded as GitHub Actions CI artifacts after execution.
-
----
-
 ### Flaky Test Detection
 
 A flaky test is a test that intermittently passes and fails without a corresponding change in the application or test code.
@@ -178,8 +158,6 @@ The framework identifies potential flaky tests using:
 * CI execution history
 
 If a test fails initially but passes after a retry, it is treated as a potential flaky test and should be investigated further rather than relying permanently on retries.
-
----
 
 ### Flaky Test Mitigation Strategy
 
