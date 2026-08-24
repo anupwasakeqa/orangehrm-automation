@@ -1,57 +1,55 @@
 name: OrangeHRM Automation Tests
 
 on:
-
   push:
-
     branches:
-
       - main
-
       - master
 
   pull_request:
-
     branches:
-
       - main
-
       - master
 
   workflow_dispatch:
 
 jobs:
-
   test:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout source code
-
         uses: actions/checkout@v7
 
       - name: Setup Java 17
-
         uses: actions/setup-java@v5
-
         with:
-
           distribution: temurin
-
           java-version: '17'
-
           cache: maven
 
       - name: Install Xvfb and FFmpeg
-
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb ffmpeg
 
-      - name: Start virtual display
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD1D2D5D0A6B1E
 
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+          k6 version
+
+      - name: Start virtual display
         run: |
           Xvfb :99 -screen 0 1920x1080x24 > /tmp/xvfb.log 2>&1 &
           echo $! > /tmp/xvfb.pid
@@ -60,12 +58,10 @@ jobs:
           echo "Virtual display started on :99"
 
       - name: Prepare video directory
-
         run: |
           mkdir -p videos
 
       - name: Start screen recording
-
         run: |
           ffmpeg \
             -y \
@@ -80,19 +76,19 @@ jobs:
             > /tmp/ffmpeg.log 2>&1 &
 
           echo $! > /tmp/ffmpeg.pid
-
           sleep 3
-
           echo "Screen recording started."
 
       - name: Run Maven Tests
+        run: |
+          mvn clean test
 
-        run: mvn clean test
+      - name: Run k6 Performance Test
+        run: |
+          k6 run performance/k6/login.js
 
       - name: Stop screen recording
-
         if: always()
-
         run: |
           if [ -f /tmp/ffmpeg.pid ]; then
             kill -INT "$(cat /tmp/ffmpeg.pid)" || true
@@ -112,83 +108,47 @@ jobs:
           fi
 
       - name: Upload Extent HTML Report
-
         if: always()
-
         uses: actions/upload-artifact@v6
-
         with:
-
           name: orangehrm-extent-report
-
           path: test-output/ExtentReport.html
-
           if-no-files-found: warn
 
       - name: Upload Test Reports
-
         if: always()
-
         uses: actions/upload-artifact@v6
-
         with:
-
           name: orangehrm-html-test-reports
-
           path: |
-
             test-output/*.html
-
             test-output/*.xml
-
           if-no-files-found: warn
 
       - name: Upload Screenshots
-
         if: always()
-
         uses: actions/upload-artifact@v6
-
         with:
-
           name: orangehrm-test-screenshots
-
           path: |
-
             test-output/screenshots/
-
             screenshots/
-
           if-no-files-found: warn
 
       - name: Upload Videos
-
         if: always()
-
         uses: actions/upload-artifact@v6
-
         with:
-
           name: orangehrm-test-videos
-
           path: videos/
-
           if-no-files-found: warn
 
       - name: Upload Xvfb and FFmpeg logs
-
         if: always()
-
         uses: actions/upload-artifact@v6
-
         with:
-
           name: orangehrm-video-recording-logs
-
           path: |
-
             /tmp/xvfb.log
-
             /tmp/ffmpeg.log
-
           if-no-files-found: warn
