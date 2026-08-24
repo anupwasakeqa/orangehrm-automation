@@ -102,15 +102,6 @@ public class BaseTest {
                         )
                 );
 
-        /*
-         * Keep the page-load timeout controlled in CI.
-         *
-         * OrangeHRM is an SPA and Chrome renderer can sometimes
-         * remain busy even after the page is usable.
-         *
-         * The actual navigation strategy is "eager", so we don't
-         * wait unnecessarily for every resource.
-         */
         int pageLoadTimeout =
                 configuredPageLoadTimeout > 60
                         ? 60
@@ -160,12 +151,6 @@ public class BaseTest {
 
                 driver.get(baseUrl);
 
-                /*
-                 * With eager pageLoadStrategy, Selenium returns
-                 * once DOMContentLoaded is reached.
-                 *
-                 * Give the SPA a short moment to finish rendering.
-                 */
                 try {
 
                     Thread.sleep(1500);
@@ -214,10 +199,6 @@ public class BaseTest {
                     throw e;
                 }
 
-                /*
-                 * Give Chrome/network a short recovery period
-                 * before trying again.
-                 */
                 try {
 
                     Thread.sleep(2000);
@@ -282,26 +263,19 @@ public class BaseTest {
         // PAGE LOAD STRATEGY
         // ========================================================
 
-        /*
-         * IMPORTANT:
-         *
-         * OrangeHRM is a JavaScript SPA.
-         * "normal" can make Chrome wait too long for renderer/network
-         * activity in GitHub Actions.
-         *
-         * "eager" waits until DOMContentLoaded and is much more
-         * stable for CI automation.
-         */
         options.setPageLoadStrategy(
                 org.openqa.selenium.PageLoadStrategy.EAGER
         );
 
         // ========================================================
-        // GITHUB ACTIONS / CI CONFIGURATION
+        // CI CONFIGURATION
         // ========================================================
 
         String ci =
                 System.getenv("CI");
+
+        String display =
+                System.getenv("DISPLAY");
 
         if ("true".equalsIgnoreCase(ci)) {
 
@@ -309,13 +283,42 @@ public class BaseTest {
                     "CI environment detected."
             );
 
-            System.out.println(
-                    "Running Chrome in headless mode."
-            );
+            /*
+             * If DISPLAY is available, GitHub Actions is running
+             * Chrome on Xvfb virtual display.
+             *
+             * This allows FFmpeg to record the browser screen.
+             */
+            if (display != null &&
+                    !display.trim().isEmpty()) {
 
-            options.addArguments(
-                    "--headless=new"
-            );
+                System.out.println(
+                        "Virtual display detected: "
+                                + display
+                );
+
+                System.out.println(
+                        "Running Chrome in headed mode "
+                                + "for video recording."
+                );
+
+            } else {
+
+                /*
+                 * Fallback for CI environments without DISPLAY.
+                 */
+                System.out.println(
+                        "No DISPLAY detected."
+                );
+
+                System.out.println(
+                        "Running Chrome in headless mode."
+                );
+
+                options.addArguments(
+                        "--headless=new"
+                );
+            }
 
             options.addArguments(
                     "--no-sandbox"
@@ -378,10 +381,6 @@ public class BaseTest {
                 "--disable-infobars"
         );
 
-        /*
-         * Selenium Manager automatically manages
-         * the ChromeDriver.
-         */
         return new ChromeDriver(options);
     }
 

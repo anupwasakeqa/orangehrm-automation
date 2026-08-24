@@ -44,9 +44,72 @@ jobs:
 
           cache: maven
 
+      - name: Install Xvfb and FFmpeg
+
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb ffmpeg
+
+      - name: Start virtual display
+
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 > /tmp/xvfb.log 2>&1 &
+          echo $! > /tmp/xvfb.pid
+          sleep 2
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+          echo "Virtual display started on :99"
+
+      - name: Prepare video directory
+
+        run: |
+          mkdir -p videos
+
+      - name: Start screen recording
+
+        run: |
+          ffmpeg \
+            -y \
+            -video_size 1920x1080 \
+            -framerate 15 \
+            -f x11grab \
+            -i :99.0 \
+            -c:v libx264 \
+            -preset ultrafast \
+            -pix_fmt yuv420p \
+            videos/orangehrm-test-run.mp4 \
+            > /tmp/ffmpeg.log 2>&1 &
+
+          echo $! > /tmp/ffmpeg.pid
+
+          sleep 3
+
+          echo "Screen recording started."
+
       - name: Run Maven Tests
 
         run: mvn clean test
+
+      - name: Stop screen recording
+
+        if: always()
+
+        run: |
+          if [ -f /tmp/ffmpeg.pid ]; then
+            kill -INT "$(cat /tmp/ffmpeg.pid)" || true
+            sleep 3
+          fi
+
+          if [ -f /tmp/xvfb.pid ]; then
+            kill "$(cat /tmp/xvfb.pid)" || true
+          fi
+
+          echo "Screen recording stopped."
+
+          if [ -f videos/orangehrm-test-run.mp4 ]; then
+            ls -lh videos/orangehrm-test-run.mp4
+          else
+            echo "Video file was not generated."
+          fi
 
       - name: Upload Extent HTML Report
 
@@ -109,5 +172,23 @@ jobs:
           name: orangehrm-test-videos
 
           path: videos/
+
+          if-no-files-found: warn
+
+      - name: Upload Xvfb and FFmpeg logs
+
+        if: always()
+
+        uses: actions/upload-artifact@v6
+
+        with:
+
+          name: orangehrm-video-recording-logs
+
+          path: |
+
+            /tmp/xvfb.log
+
+            /tmp/ffmpeg.log
 
           if-no-files-found: warn
