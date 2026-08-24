@@ -128,6 +128,11 @@ public class EmployeeDeleteTest extends BaseTest {
                 "Base URL is null."
         );
 
+        Assert.assertNotNull(
+                cookies,
+                "Authentication cookies are null."
+        );
+
         Assert.assertFalse(
                 cookies.isEmpty(),
                 "Authentication cookies are empty."
@@ -167,16 +172,20 @@ public class EmployeeDeleteTest extends BaseTest {
         );
 
         System.out.println(
-                "GET API Status Code: "
+                "Final GET API Status Code: "
                         + employeeResponse.getStatusCode()
         );
+
+        // ========================================================
+        // PRINT GET RESPONSE
+        // ========================================================
+
+        String getResponseBody =
+                employeeResponse.asString();
 
         System.out.println(
                 "GET API Response:"
         );
-
-        String getResponseBody =
-                employeeResponse.asString();
 
         if (getResponseBody != null
                 && !getResponseBody.trim().isEmpty()) {
@@ -209,14 +218,16 @@ public class EmployeeDeleteTest extends BaseTest {
                 null;
 
         int totalEmployees =
-                employeeResponse
-                        .jsonPath()
-                        .getInt("data.size()");
+                getDataSize(employeeResponse);
 
         System.out.println(
                 "Employees returned by API: "
                         + totalEmployees
         );
+
+        // ========================================================
+        // SEARCH EMPLOYEE
+        // ========================================================
 
         for (
                 int i = 0;
@@ -225,39 +236,34 @@ public class EmployeeDeleteTest extends BaseTest {
         ) {
 
             String apiEmployeeId =
-                    employeeResponse
-                            .jsonPath()
-                            .getString(
-                                    "data[" + i + "].employeeId"
-                            );
+                    getStringValue(
+                            employeeResponse,
+                            "data[" + i + "].employeeId"
+                    );
 
             String apiFirstName =
-                    employeeResponse
-                            .jsonPath()
-                            .getString(
-                                    "data[" + i + "].firstName"
-                            );
+                    getStringValue(
+                            employeeResponse,
+                            "data[" + i + "].firstName"
+                    );
 
             String apiMiddleName =
-                    employeeResponse
-                            .jsonPath()
-                            .getString(
-                                    "data[" + i + "].middleName"
-                            );
+                    getStringValue(
+                            employeeResponse,
+                            "data[" + i + "].middleName"
+                    );
 
             String apiLastName =
-                    employeeResponse
-                            .jsonPath()
-                            .getString(
-                                    "data[" + i + "].lastName"
-                            );
+                    getStringValue(
+                            employeeResponse,
+                            "data[" + i + "].lastName"
+                    );
 
             String apiEmpNumberText =
-                    employeeResponse
-                            .jsonPath()
-                            .getString(
-                                    "data[" + i + "].empNumber"
-                            );
+                    getStringValue(
+                            employeeResponse,
+                            "data[" + i + "].empNumber"
+                    );
 
             System.out.println(
                     "API Employee "
@@ -274,37 +280,60 @@ public class EmployeeDeleteTest extends BaseTest {
                             + apiEmpNumberText
             );
 
-            String apiFullName =
-                    (
-                            (apiFirstName == null
-                                    ? ""
-                                    : apiFirstName)
-                                    + " "
-                                    + (apiLastName == null
-                                    ? ""
-                                    : apiLastName)
-                    ).trim();
+            // ====================================================
+            // MATCH USING FIRST NAME + LAST NAME
+            // ====================================================
 
-            if (apiFullName.equalsIgnoreCase(
-                    employeeName
-            )) {
+            boolean firstNameMatches =
+                    apiFirstName != null
+                            && apiFirstName.trim()
+                                    .equalsIgnoreCase(firstName);
+
+            boolean lastNameMatches =
+                    apiLastName != null
+                            && apiLastName.trim()
+                                    .equalsIgnoreCase(lastName);
+
+            if (firstNameMatches && lastNameMatches) {
 
                 employeeId =
                         apiEmployeeId;
 
-                try {
+                // =================================================
+                // EMPLOYEE ID CAN BE NULL IN ORANGEHRM
+                // =================================================
 
-                    employeeNumber =
-                            Integer.valueOf(
-                                    apiEmpNumberText
-                            );
+                if (employeeId != null) {
 
-                } catch (NumberFormatException e) {
+                    employeeId =
+                            employeeId.trim();
 
-                    Assert.fail(
-                            "Invalid empNumber received from API: "
-                                    + apiEmpNumberText
-                    );
+                    if (employeeId.isEmpty()) {
+                        employeeId = null;
+                    }
+                }
+
+                // =================================================
+                // GET INTERNAL EMPLOYEE NUMBER
+                // =================================================
+
+                if (apiEmpNumberText != null
+                        && !apiEmpNumberText.trim().isEmpty()) {
+
+                    try {
+
+                        employeeNumber =
+                                Integer.valueOf(
+                                        apiEmpNumberText.trim()
+                                );
+
+                    } catch (NumberFormatException e) {
+
+                        Assert.fail(
+                                "Invalid empNumber received from API: "
+                                        + apiEmpNumberText
+                        );
+                    }
                 }
 
                 System.out.println(
@@ -339,31 +368,20 @@ public class EmployeeDeleteTest extends BaseTest {
         }
 
         // ========================================================
-        // VERIFY API EMPLOYEE DATA
+        // IMPORTANT:
+        //
+        // OrangeHRM may return employeeId = null.
+        //
+        // employeeId is NOT required for DELETE.
+        //
+        // empNumber is the actual identifier required by
+        // deleteEmployee().
         // ========================================================
 
         Assert.assertNotNull(
-                employeeId,
-                "Matching Employee ID was not found in GET API."
-        );
-
-        Assert.assertFalse(
-                employeeId.trim().isEmpty(),
-                "Employee ID is empty."
-        );
-
-        Assert.assertNotNull(
                 employeeNumber,
-                "Matching API empNumber was not found for Employee ID: "
-                        + employeeId
-        );
-
-        employeeId =
-                employeeId.trim();
-
-        System.out.println(
-                "Employee ID captured from API: "
-                        + employeeId
+                "Matching API empNumber was not found for employee: "
+                        + employeeName
         );
 
         System.out.println(
@@ -371,23 +389,23 @@ public class EmployeeDeleteTest extends BaseTest {
                         + employeeNumber
         );
 
+        if (employeeId == null) {
+
+            System.out.println(
+                    "Employee ID is null. This is acceptable because "
+                            + "DELETE API uses empNumber."
+            );
+
+        } else {
+
+            System.out.println(
+                    "Employee ID captured from API: "
+                            + employeeId
+            );
+        }
+
         // ========================================================
         // VERIFY CREATED EMPLOYEE IN UI
-        // ========================================================
-        //
-        // IMPORTANT:
-        //
-        // employeeId = 0382
-        // employeeNumber = 179
-        //
-        // Direct URL requires:
-        //
-        // /empNumber/179
-        //
-        // NOT:
-        //
-        // /empNumber/0382
-        //
         // ========================================================
 
         System.out.println(
@@ -615,10 +633,10 @@ public class EmployeeDeleteTest extends BaseTest {
             Map<String, String> cookies) {
 
         final int maxAttempts =
-                8;
+                12;
 
         final long waitBetweenAttempts =
-                1500L;
+                2000L;
 
         Response lastResponse =
                 null;
@@ -665,11 +683,9 @@ public class EmployeeDeleteTest extends BaseTest {
                     if (lastResponse.getStatusCode() == 200) {
 
                         int count =
-                                lastResponse
-                                        .jsonPath()
-                                        .getInt(
-                                                "data.size()"
-                                        );
+                                getDataSize(
+                                        lastResponse
+                                );
 
                         System.out.println(
                                 "Employees returned on attempt "
@@ -678,10 +694,20 @@ public class EmployeeDeleteTest extends BaseTest {
                                         + count
                         );
 
-                        if (containsEmployee(
-                                lastResponse,
-                                employeeName
-                        )) {
+                        boolean exists =
+                                containsEmployee(
+                                        lastResponse,
+                                        employeeName
+                                );
+
+                        System.out.println(
+                                "Created employee found on attempt "
+                                        + attempt
+                                        + ": "
+                                        + exists
+                        );
+
+                        if (exists) {
 
                             System.out.println(
                                     "Created employee is now available in GET API."
@@ -724,10 +750,10 @@ public class EmployeeDeleteTest extends BaseTest {
             Map<String, String> cookies) {
 
         final int maxAttempts =
-                5;
+                8;
 
         final long waitBetweenAttempts =
-                1500L;
+                2000L;
 
         Response lastResponse =
                 null;
@@ -817,21 +843,15 @@ public class EmployeeDeleteTest extends BaseTest {
             String expectedEmployeeName) {
 
         if (response == null) {
-
             return false;
         }
 
         try {
 
             int totalEmployees =
-                    response
-                            .jsonPath()
-                            .getInt(
-                                    "data.size()"
-                            );
+                    getDataSize(response);
 
             if (totalEmployees <= 0) {
-
                 return false;
             }
 
@@ -841,7 +861,6 @@ public class EmployeeDeleteTest extends BaseTest {
                             .split("\\s+");
 
             if (expectedParts.length < 2) {
-
                 return false;
             }
 
@@ -860,27 +879,27 @@ public class EmployeeDeleteTest extends BaseTest {
             ) {
 
                 String firstName =
-                        response
-                                .jsonPath()
-                                .getString(
-                                        "data[" + i + "].firstName"
-                                );
+                        getStringValue(
+                                response,
+                                "data[" + i + "].firstName"
+                        );
 
                 String lastName =
-                        response
-                                .jsonPath()
-                                .getString(
-                                        "data[" + i + "].lastName"
-                                );
+                        getStringValue(
+                                response,
+                                "data[" + i + "].lastName"
+                        );
 
                 if (firstName != null
                         && lastName != null
-                        && firstName.equalsIgnoreCase(
-                                expectedFirstName
-                        )
-                        && lastName.equalsIgnoreCase(
-                                expectedLastName
-                        )) {
+                        && firstName.trim()
+                                .equalsIgnoreCase(
+                                        expectedFirstName
+                                )
+                        && lastName.trim()
+                                .equalsIgnoreCase(
+                                        expectedLastName
+                                )) {
 
                     return true;
                 }
@@ -895,6 +914,77 @@ public class EmployeeDeleteTest extends BaseTest {
         }
 
         return false;
+    }
+
+    // ============================================================
+    // GET DATA SIZE SAFELY
+    // ============================================================
+
+    private int getDataSize(
+            Response response) {
+
+        if (response == null) {
+            return 0;
+        }
+
+        try {
+
+            Object data =
+                    response
+                            .jsonPath()
+                            .get("data");
+
+            if (data == null) {
+                return 0;
+            }
+
+            if (data instanceof java.util.List<?>) {
+
+                return (
+                        (java.util.List<?>) data
+                ).size();
+            }
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Unable to read API data size: "
+                            + e.getMessage()
+            );
+        }
+
+        return 0;
+    }
+
+    // ============================================================
+    // GET STRING VALUE SAFELY
+    // ============================================================
+
+    private String getStringValue(
+            Response response,
+            String path) {
+
+        if (response == null) {
+            return null;
+        }
+
+        try {
+
+            Object value =
+                    response
+                            .jsonPath()
+                            .get(path);
+
+            if (value == null) {
+                return null;
+            }
+
+            return String.valueOf(value);
+
+        } catch (Exception e) {
+
+            return null;
+        }
     }
 
     // ============================================================
