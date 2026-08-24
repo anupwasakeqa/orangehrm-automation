@@ -104,10 +104,6 @@ public class EmployeeUpdateTest extends BaseTest {
 
         // ========================================================
         // CREATE EMPLOYEE USING API
-        //
-        // IMPORTANT:
-        // API response gives us internal empNumber directly.
-        // No UI URL extraction required.
         // ========================================================
 
         System.out.println();
@@ -212,36 +208,21 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // OPEN EMPLOYEE LIST
+        // OPEN CREATED EMPLOYEE DIRECTLY BY EMP NUMBER
         // ========================================================
 
         System.out.println();
         System.out.println("================================================");
-        System.out.println("OPENING EMPLOYEE LIST");
+        System.out.println("OPENING CREATED EMPLOYEE BY EMP NUMBER");
         System.out.println("================================================");
 
-        employeePage.clickPIM();
-        employeePage.clickEmployeeList();
-
-        System.out.println(
-                "Employee List opened successfully."
-        );
-
-        // ========================================================
-        // SEARCH CREATED EMPLOYEE
-        // ========================================================
-
-        System.out.println();
-        System.out.println("================================================");
-        System.out.println("SEARCHING CREATED EMPLOYEE FOR EDIT");
-        System.out.println("================================================");
-
-        employeePage.clickEditEmployee(
-                firstName
+        employeePage.clickEditEmployeeById(
+                String.valueOf(employeeNumber)
         );
 
         System.out.println(
-                "Employee edit page opened successfully."
+                "Employee edit page opened successfully using empNumber: "
+                        + employeeNumber
         );
 
         // ========================================================
