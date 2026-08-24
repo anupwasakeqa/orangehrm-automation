@@ -3,14 +3,20 @@
 <!DOCTYPE suite SYSTEM
         "https://testng.org/testng-1.0.dtd">
 
-<suite name="OrangeHRM Automation Suite">
+<suite name="OrangeHRM Automation Suite"
+       parallel="classes"
+       thread-count="3">
 
-    <test name="OrangeHRM Tests"> <classes> <class name="com.orangehrm.tests.LoginTest"/> 
-    <class name="com.orangehrm.tests.EmployeeCreationTest"/> 
-    <class name="com.orangehrm.tests.EmployeeUpdateTest"/>
-     <class name="com.orangehrm.tests.EmployeeDeleteTest"/>
-      <class name="com.orangehrm.tests.EmployeeApiTest"/> 
-      <class name="com.orangehrm.tests.RoleValidationTest"/>
+    <test name="OrangeHRM Tests">
+
+        <classes>
+
+            <class name="com.orangehrm.tests.LoginTest"/>
+            <class name="com.orangehrm.tests.EmployeeCreationTest"/>
+            <class name="com.orangehrm.tests.EmployeeUpdateTest"/>
+            <class name="com.orangehrm.tests.EmployeeDeleteTest"/>
+            <class name="com.orangehrm.tests.EmployeeApiTest"/>
+            <class name="com.orangehrm.tests.RoleValidationTest"/>
 
         </classes>
 
