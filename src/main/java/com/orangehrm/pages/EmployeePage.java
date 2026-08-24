@@ -16,18 +16,19 @@ public class EmployeePage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    // Stores the first name of the employee created in this test flow.
-    // Used as fallback when OrangeHRM remains on /pim/addEmployee.
+    // Stores employee first name created in current flow.
     private String lastCreatedEmployeeFirstName;
+
+    // Stores employee number immediately after successful creation.
+    // This is the PRIMARY source for getCurrentEmployeeId().
+    private String lastCreatedEmployeeNumber;
 
     // =========================================================
     // CONSTRUCTOR
     // =========================================================
 
     public EmployeePage(WebDriver driver) {
-
         this.driver = driver;
-
         this.wait = new WebDriverWait(
                 driver,
                 Duration.ofSeconds(30)
@@ -39,19 +40,13 @@ public class EmployeePage {
     // =========================================================
 
     private final By pimMenu =
-            By.xpath(
-                    "//span[normalize-space()='PIM']/ancestor::a"
-            );
+            By.xpath("//span[normalize-space()='PIM']/ancestor::a");
 
     private final By employeeListMenu =
-            By.xpath(
-                    "//a[normalize-space()='Employee List']"
-            );
+            By.xpath("//a[normalize-space()='Employee List']");
 
     private final By addEmployeeButton =
-            By.xpath(
-                    "//button[normalize-space()='Add']"
-            );
+            By.xpath("//button[normalize-space()='Add']");
 
     private final By firstNameField =
             By.name("firstName");
@@ -69,14 +64,10 @@ public class EmployeePage {
             By.cssSelector(".oxd-form-loader");
 
     private final By searchButton =
-            By.xpath(
-                    "//button[normalize-space()='Search']"
-            );
+            By.xpath("//button[normalize-space()='Search']");
 
     private final By resetButton =
-            By.xpath(
-                    "//button[normalize-space()='Reset']"
-            );
+            By.xpath("//button[normalize-space()='Reset']");
 
     private final By employeeIdSearchField =
             By.xpath(
@@ -108,21 +99,12 @@ public class EmployeePage {
 
         WebElement pim =
                 wait.until(
-                        ExpectedConditions.elementToBeClickable(
-                                pimMenu
-                        )
+                        ExpectedConditions.elementToBeClickable(pimMenu)
                 );
 
         scrollIntoView(pim);
 
-        try {
-
-            pim.click();
-
-        } catch (Exception e) {
-
-            javascriptClick(pim);
-        }
+        clickElement(pim);
 
         wait.until(
                 ExpectedConditions.urlContains("/pim/")
@@ -150,14 +132,7 @@ public class EmployeePage {
 
         scrollIntoView(employeeList);
 
-        try {
-
-            employeeList.click();
-
-        } catch (Exception e) {
-
-            javascriptClick(employeeList);
-        }
+        clickElement(employeeList);
 
         wait.until(
                 ExpectedConditions.urlContains(
@@ -195,14 +170,7 @@ public class EmployeePage {
 
         scrollIntoView(add);
 
-        try {
-
-            add.click();
-
-        } catch (Exception e) {
-
-            javascriptClick(add);
-        }
+        clickElement(add);
 
         wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
@@ -244,20 +212,35 @@ public class EmployeePage {
         System.out.println("STARTING EMPLOYEE CREATION");
         System.out.println("================================================");
 
-        // Store created employee name for fallback Employee Number lookup.
-        this.lastCreatedEmployeeFirstName = firstName;
+        if (firstName == null || firstName.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "First Name cannot be empty."
+            );
+        }
 
-        // -----------------------------------------------------
+        if (lastName == null || lastName.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Last Name cannot be empty."
+            );
+        }
+
+        // Reset old cached values before new employee creation.
+        this.lastCreatedEmployeeFirstName =
+                firstName.trim();
+
+        this.lastCreatedEmployeeNumber = null;
+
+        // =====================================================
         // NAVIGATION
-        // -----------------------------------------------------
+        // =====================================================
 
         clickPIM();
         clickEmployeeList();
         clickAddEmployee();
 
-        // -----------------------------------------------------
+        // =====================================================
         // FIRST NAME
-        // -----------------------------------------------------
+        // =====================================================
 
         WebElement firstNameElement =
                 wait.until(
@@ -269,9 +252,9 @@ public class EmployeePage {
         clearField(firstNameElement);
         firstNameElement.sendKeys(firstName);
 
-        // -----------------------------------------------------
+        // =====================================================
         // MIDDLE NAME
-        // -----------------------------------------------------
+        // =====================================================
 
         WebElement middleNameElement =
                 wait.until(
@@ -288,9 +271,9 @@ public class EmployeePage {
             middleNameElement.sendKeys(middleName);
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // LAST NAME
-        // -----------------------------------------------------
+        // =====================================================
 
         WebElement lastNameElement =
                 wait.until(
@@ -306,9 +289,9 @@ public class EmployeePage {
                 "Employee details entered successfully."
         );
 
-        // -----------------------------------------------------
+        // =====================================================
         // SAVE
-        // -----------------------------------------------------
+        // =====================================================
 
         By employeeFormSave =
                 By.xpath(
@@ -330,32 +313,48 @@ public class EmployeePage {
 
         sleep(500);
 
-        try {
-
-            wait.until(
-                    ExpectedConditions.elementToBeClickable(save)
-            );
-
-            save.click();
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Normal Save click failed. Using JavaScript."
-            );
-
-            javascriptClick(save);
-        }
+        clickElement(save);
 
         System.out.println(
                 "Employee Save button clicked."
         );
 
-        // -----------------------------------------------------
-        // WAIT FOR SAVE OPERATION
-        // -----------------------------------------------------
+        // =====================================================
+        // WAIT FOR EMPLOYEE CREATION RESULT
+        // =====================================================
 
         waitForEmployeeCreationResult();
+
+        // =====================================================
+        // IMPORTANT:
+        // Employee number MUST already be captured here.
+        // =====================================================
+
+        String currentUrl = driver.getCurrentUrl();
+
+        String capturedEmployeeNumber =
+                extractEmployeeNumberFromUrl(currentUrl);
+
+        if (capturedEmployeeNumber != null) {
+
+            this.lastCreatedEmployeeNumber =
+                    capturedEmployeeNumber;
+
+            System.out.println();
+            System.out.println(
+                    "================================================"
+            );
+            System.out.println(
+                    "EMPLOYEE NUMBER CAPTURED IMMEDIATELY AFTER SAVE"
+            );
+            System.out.println(
+                    "Employee Number: "
+                            + this.lastCreatedEmployeeNumber
+            );
+            System.out.println(
+                    "================================================"
+            );
+        }
 
         System.out.println(
                 "Employee save operation completed."
@@ -363,7 +362,7 @@ public class EmployeePage {
 
         System.out.println(
                 "Current URL after save: "
-                        + driver.getCurrentUrl()
+                        + currentUrl
         );
 
         System.out.println(
@@ -388,20 +387,35 @@ public class EmployeePage {
 
             try {
 
-                String url =
-                        driver.getCurrentUrl();
+                String url = driver.getCurrentUrl();
 
-                // -------------------------------------------------
-                // SUCCESS - PERSONAL DETAILS PAGE
-                // -------------------------------------------------
+                // =================================================
+                // SUCCESS:
+                // PERSONAL DETAILS PAGE
+                // =================================================
 
                 if (url.contains(
                         "/pim/viewPersonalDetails/empNumber/"
                 )) {
 
-                    System.out.println(
-                            "Employee Personal Details page detected."
-                    );
+                    String employeeNumber =
+                            extractEmployeeNumberFromUrl(url);
+
+                    if (employeeNumber != null) {
+
+                        this.lastCreatedEmployeeNumber =
+                                employeeNumber;
+
+                        System.out.println();
+                        System.out.println(
+                                "Employee Personal Details page detected."
+                        );
+
+                        System.out.println(
+                                "Employee Number captured: "
+                                        + employeeNumber
+                        );
+                    }
 
                     waitForLoaderToDisappear();
 
@@ -420,9 +434,9 @@ public class EmployeePage {
                     return;
                 }
 
-                // -------------------------------------------------
+                // =================================================
                 // STILL ADD EMPLOYEE
-                // -------------------------------------------------
+                // =================================================
 
                 if (url.contains("/pim/addEmployee")) {
 
@@ -431,35 +445,38 @@ public class EmployeePage {
                     );
                 }
 
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Waiting for employee creation result..."
+                );
             }
 
             sleep(500);
         }
 
-        // ---------------------------------------------------------
-        // FINAL CHECK
-        // ---------------------------------------------------------
+        // =========================================================
+        // FINAL URL CHECK
+        // =========================================================
 
         String finalUrl =
                 driver.getCurrentUrl();
 
-        if (finalUrl.contains(
-                "/pim/viewPersonalDetails/empNumber/"
-        )) {
+        String employeeNumber =
+                extractEmployeeNumberFromUrl(finalUrl);
+
+        if (employeeNumber != null) {
+
+            this.lastCreatedEmployeeNumber =
+                    employeeNumber;
+
+            System.out.println(
+                    "Employee Number captured from final URL: "
+                            + employeeNumber
+            );
 
             return;
         }
-
-        /*
-         * Do NOT fail here.
-         *
-         * OrangeHRM CI can sometimes remain on /pim/addEmployee
-         * even though employee creation succeeded.
-         *
-         * getCurrentEmployeeId() has a fallback which searches
-         * Employee List using the created employee name.
-         */
 
         System.out.println(
                 "Employee creation navigation did not reach Personal Details."
@@ -470,7 +487,11 @@ public class EmployeePage {
         );
 
         System.out.println(
-                "Continuing with Employee Number fallback lookup..."
+                "Employee Number was not captured from URL."
+        );
+
+        System.out.println(
+                "getCurrentEmployeeId() will use fallback mechanisms."
         );
     }
 
@@ -492,35 +513,54 @@ public class EmployeePage {
                 "Current URL: " + currentUrl
         );
 
-        // -----------------------------------------------------
-        // FIRST - TRY CURRENT URL
-        // -----------------------------------------------------
+        // =====================================================
+        // FIRST AND MOST IMPORTANT:
+        // RETURN CACHED EMPLOYEE NUMBER
+        // =====================================================
+
+        if (lastCreatedEmployeeNumber != null
+                && !lastCreatedEmployeeNumber.trim().isEmpty()) {
+
+            System.out.println(
+                    "Employee Number captured from createEmployee() save URL: "
+                            + lastCreatedEmployeeNumber
+            );
+
+            return lastCreatedEmployeeNumber;
+        }
+
+        // =====================================================
+        // SECOND:
+        // TRY CURRENT URL
+        // =====================================================
 
         String employeeId =
-                extractEmployeeNumberFromUrl(
-                        currentUrl
-                );
+                extractEmployeeNumberFromUrl(currentUrl);
 
         if (employeeId != null) {
 
+            this.lastCreatedEmployeeNumber =
+                    employeeId;
+
             System.out.println(
-                    "Employee Number captured from URL: "
+                    "Employee Number captured from current URL: "
                             + employeeId
             );
 
             return employeeId;
         }
 
-        // -----------------------------------------------------
-        // SECOND - TRY CURRENT PAGE DOM
-        // -----------------------------------------------------
+        // =====================================================
+        // THIRD:
+        // TRY CURRENT PAGE DOM
+        // =====================================================
 
         try {
 
             List<WebElement> elements =
                     driver.findElements(
                             By.xpath(
-                                    "//*[contains(@href,'empNumber/')]"
+                                    "//*[@href and contains(@href,'empNumber/')]"
                             )
                     );
 
@@ -536,11 +576,12 @@ public class EmployeePage {
                     }
 
                     employeeId =
-                            extractEmployeeNumberFromUrl(
-                                    href
-                            );
+                            extractEmployeeNumberFromUrl(href);
 
                     if (employeeId != null) {
+
+                        this.lastCreatedEmployeeNumber =
+                                employeeId;
 
                         System.out.println(
                                 "Employee Number captured from page link: "
@@ -562,16 +603,57 @@ public class EmployeePage {
             );
         }
 
-        // -----------------------------------------------------
-        // THIRD - EMPLOYEE LIST FALLBACK
-        // -----------------------------------------------------
+        // =====================================================
+        // FOURTH:
+        // EMPLOYEE ID FIELD FALLBACK
+        // =====================================================
+
+        try {
+
+            WebElement idField =
+                    new WebDriverWait(
+                            driver,
+                            Duration.ofSeconds(10)
+                    ).until(
+                            ExpectedConditions.visibilityOfElementLocated(
+                                    employeeIdField
+                            )
+                    );
+
+            String fieldEmployeeId =
+                    idField
+                            .getAttribute("value")
+                            .trim();
+
+            if (!fieldEmployeeId.isEmpty()) {
+
+                System.out.println(
+                        "Employee ID captured from field: "
+                                + fieldEmployeeId
+                );
+
+                return fieldEmployeeId;
+            }
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Employee ID field fallback failed: "
+                            + e.getMessage()
+            );
+        }
+
+        // =====================================================
+        // FIFTH:
+        // EMPLOYEE LIST FALLBACK
+        // =====================================================
 
         if (lastCreatedEmployeeFirstName != null
                 && !lastCreatedEmployeeFirstName.trim().isEmpty()) {
 
             System.out.println();
             System.out.println(
-                    "Employee Number not available from current page."
+                    "Employee Number not available from URL/cache."
             );
 
             System.out.println(
@@ -621,16 +703,12 @@ public class EmployeePage {
 
                 sleep(1500);
 
-                // -------------------------------------------------
-                // FIND CREATED EMPLOYEE ROW
-                // -------------------------------------------------
-
                 WebElement employeeRow =
                         findEmployeeRowByFirstName(
                                 normalizeText(
                                         lastCreatedEmployeeFirstName
                                 ),
-                                30
+                                20
                         );
 
                 if (employeeRow != null) {
@@ -645,10 +723,6 @@ public class EmployeePage {
                                             employeeRow.getText()
                                     )
                     );
-
-                    // -------------------------------------------------
-                    // OPEN EDIT
-                    // -------------------------------------------------
 
                     WebElement editButton =
                             findEditButton(employeeRow);
@@ -681,10 +755,6 @@ public class EmployeePage {
                                         + updatedUrl
                         );
 
-                        // -------------------------------------------------
-                        // EXTRACT EMPLOYEE NUMBER
-                        // -------------------------------------------------
-
                         employeeId =
                                 extractEmployeeNumberFromUrl(
                                         updatedUrl
@@ -692,20 +762,20 @@ public class EmployeePage {
 
                         if (employeeId != null) {
 
+                            this.lastCreatedEmployeeNumber =
+                                    employeeId;
+
                             System.out.println();
                             System.out.println(
                                     "================================================"
                             );
-
                             System.out.println(
                                     "EMPLOYEE NUMBER CAPTURED SUCCESSFULLY"
                             );
-
                             System.out.println(
                                     "Employee Number: "
                                             + employeeId
                             );
-
                             System.out.println(
                                     "================================================"
                             );
@@ -731,47 +801,9 @@ public class EmployeePage {
             }
         }
 
-        // -----------------------------------------------------
-        // FOURTH - EMPLOYEE ID FIELD FALLBACK
-        // -----------------------------------------------------
-
-        try {
-
-            WebElement idField =
-                    new WebDriverWait(
-                            driver,
-                            Duration.ofSeconds(10)
-                    ).until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    employeeIdField
-                            )
-                    );
-
-            String fieldEmployeeId =
-                    idField
-                            .getAttribute("value")
-                            .trim();
-
-            if (!fieldEmployeeId.isEmpty()) {
-
-                System.out.println(
-                        "Employee ID captured from field: "
-                                + fieldEmployeeId
-                );
-
-                return fieldEmployeeId;
-            }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Employee ID field fallback failed."
-            );
-        }
-
-        // -----------------------------------------------------
+        // =====================================================
         // FINAL FAILURE
-        // -----------------------------------------------------
+        // =====================================================
 
         throw new RuntimeException(
                 "Unable to capture generated Employee Number. "
@@ -835,8 +867,7 @@ public class EmployeePage {
                 return false;
             }
 
-            employeeId =
-                    employeeId.trim();
+            employeeId = employeeId.trim();
 
             openEmployeeById(employeeId);
 
@@ -894,8 +925,7 @@ public class EmployeePage {
                 return false;
             }
 
-            empNumber =
-                    empNumber.trim();
+            empNumber = empNumber.trim();
 
             openEmployeeById(empNumber);
 
@@ -931,16 +961,13 @@ public class EmployeePage {
                 System.out.println(
                         "================================================"
                 );
-
                 System.out.println(
                         "EMPLOYEE FOUND SUCCESSFULLY"
                 );
-
                 System.out.println(
                         "Employee Number: "
                                 + empNumber
                 );
-
                 System.out.println(
                         "================================================"
                 );
@@ -974,8 +1001,7 @@ public class EmployeePage {
             );
         }
 
-        employeeId =
-                employeeId.trim();
+        employeeId = employeeId.trim();
 
         String currentUrl =
                 driver.getCurrentUrl();
@@ -1060,11 +1086,9 @@ public class EmployeePage {
         System.out.println(
                 "================================================"
         );
-
         System.out.println(
                 "OPENING EMPLOYEE FOR EDIT BY ID"
         );
-
         System.out.println(
                 "================================================"
         );
@@ -1093,8 +1117,7 @@ public class EmployeePage {
             );
         }
 
-        employeeId =
-                employeeId.trim();
+        employeeId = employeeId.trim();
 
         ensureEmployeeListPage();
 
@@ -1212,11 +1235,9 @@ public class EmployeePage {
         System.out.println(
                 "================================================"
         );
-
         System.out.println(
                 "OPENING EMPLOYEE FOR EDIT"
         );
-
         System.out.println(
                 "================================================"
         );
@@ -1300,9 +1321,7 @@ public class EmployeePage {
                     "Resetting search and retrying..."
             );
 
-            retryEmployeeSearch(
-                    searchFirstName
-            );
+            retryEmployeeSearch(searchFirstName);
 
             employeeRow =
                     findEmployeeRowByFirstName(
@@ -1422,9 +1441,7 @@ public class EmployeePage {
                 System.currentTimeMillis()
                         + (timeoutSeconds * 1000L);
 
-        while (
-                System.currentTimeMillis()
-                        < endTime) {
+        while (System.currentTimeMillis() < endTime) {
 
             try {
 
@@ -1790,11 +1807,9 @@ public class EmployeePage {
         System.out.println(
                 "================================================"
         );
-
         System.out.println(
                 "SAVING UPDATED EMPLOYEE DETAILS"
         );
-
         System.out.println(
                 "================================================"
         );
@@ -1895,11 +1910,9 @@ public class EmployeePage {
         System.out.println(
                 "================================================"
         );
-
         System.out.println(
                 "VERIFYING UPDATED EMPLOYEE DETAILS"
         );
-
         System.out.println(
                 "================================================"
         );
@@ -1949,11 +1962,10 @@ public class EmployeePage {
                                             .equalsIgnoreCase(
                                                     expectedFirstName
                                             )
-                                            &&
-                                            actualLastName
-                                                    .equalsIgnoreCase(
-                                                            expectedLastName
-                                                    );
+                                            && actualLastName
+                                            .equalsIgnoreCase(
+                                                    expectedLastName
+                                            );
 
                                 } catch (Exception e) {
 
@@ -2059,9 +2071,7 @@ public class EmployeePage {
                 System.currentTimeMillis()
                         + 30000;
 
-        while (
-                System.currentTimeMillis()
-                        < endTime) {
+        while (System.currentTimeMillis() < endTime) {
 
             List<WebElement> rows =
                     driver.findElements(tableRows);
@@ -2082,8 +2092,7 @@ public class EmployeePage {
                     if (rowText.contains(
                             firstName.toLowerCase()
                     )
-                            &&
-                            rowText.contains(
+                            && rowText.contains(
                                     lastName.toLowerCase()
                             )) {
 
@@ -2190,9 +2199,7 @@ public class EmployeePage {
                 System.currentTimeMillis()
                         + 30000;
 
-        while (
-                System.currentTimeMillis()
-                        < endTime) {
+        while (System.currentTimeMillis() < endTime) {
 
             List<WebElement> rows =
                     driver.findElements(tableRows);
@@ -2488,13 +2495,15 @@ public class EmployeePage {
     private String escapeXPathText(
             String text) {
 
-        if (!text.contains("'")) {
+        if (text == null) {
+            return "''";
+        }
 
+        if (!text.contains("'")) {
             return "'" + text + "'";
         }
 
         if (!text.contains("\"")) {
-
             return "\"" + text + "\"";
         }
 
@@ -2507,7 +2516,6 @@ public class EmployeePage {
         for (int i = 0; i < parts.length; i++) {
 
             if (i > 0) {
-
                 result.append(", \"'\", ");
             }
 

@@ -13,10 +13,6 @@ import io.restassured.response.Response;
 
 public class EmployeeDeleteTest extends BaseTest {
 
-    // ============================================================
-    // DELETE EMPLOYEE TEST
-    // ============================================================
-
     @Test
     public void deleteEmployeeTest() {
 
@@ -49,7 +45,7 @@ public class EmployeeDeleteTest extends BaseTest {
         );
 
         // ========================================================
-        // PAGE + API OBJECTS
+        // OBJECTS
         // ========================================================
 
         EmployeePage employeePage =
@@ -59,62 +55,7 @@ public class EmployeeDeleteTest extends BaseTest {
                 new EmployeeApi();
 
         // ========================================================
-        // CREATE UNIQUE EMPLOYEE
-        // ========================================================
-
-        String firstName =
-                "Amelia";
-
-        String middleName =
-                "Test";
-
-        String lastName =
-                "Delete" + System.currentTimeMillis();
-
-        String employeeName =
-                firstName + " " + lastName;
-
-        System.out.println(
-                "================================================"
-        );
-
-        System.out.println(
-                "CREATING UNIQUE EMPLOYEE"
-        );
-
-        System.out.println(
-                "First Name  : " + firstName
-        );
-
-        System.out.println(
-                "Middle Name : " + middleName
-        );
-
-        System.out.println(
-                "Last Name   : " + lastName
-        );
-
-        System.out.println(
-                "Full Name   : " + employeeName
-        );
-
-        System.out.println(
-                "================================================"
-        );
-
-        employeePage.createEmployee(
-                firstName,
-                middleName,
-                lastName
-        );
-
-        System.out.println(
-                "Employee creation submitted successfully: "
-                        + employeeName
-        );
-
-        // ========================================================
-        // GET COOKIES + BASE URL
+        // COOKIES + BASE URL
         // ========================================================
 
         Map<String, String> cookies =
@@ -143,271 +84,137 @@ public class EmployeeDeleteTest extends BaseTest {
         );
 
         // ========================================================
-        // API GET - WAIT FOR CREATED EMPLOYEE
+        // UNIQUE EMPLOYEE DATA
         // ========================================================
 
+        String uniqueValue =
+                String.valueOf(
+                        System.currentTimeMillis()
+                ).substring(8);
+
+        String firstName =
+                "Amelia" + uniqueValue;
+
+        String middleName =
+                "Test";
+
+        String lastName =
+                "Delete";
+
+        String employeeName =
+                firstName + " " + lastName;
+
+        System.out.println();
         System.out.println(
                 "================================================"
         );
 
         System.out.println(
-                "WAITING FOR CREATED EMPLOYEE IN GET API"
+                "CREATING UNIQUE EMPLOYEE USING API"
+        );
+
+        System.out.println(
+                "First Name  : " + firstName
+        );
+
+        System.out.println(
+                "Middle Name : " + middleName
+        );
+
+        System.out.println(
+                "Last Name   : " + lastName
+        );
+
+        System.out.println(
+                "Full Name   : " + employeeName
         );
 
         System.out.println(
                 "================================================"
         );
 
-        Response employeeResponse =
-                getEmployeeWithRetry(
-                        employeeApi,
+        // ========================================================
+        // CREATE EMPLOYEE USING API
+        // ========================================================
+
+        Response createResponse =
+                employeeApi.createEmployee(
                         baseUrl,
-                        employeeName,
+                        firstName,
+                        middleName,
+                        lastName,
                         cookies
                 );
 
         Assert.assertNotNull(
-                employeeResponse,
-                "Employee GET API response is null."
+                createResponse,
+                "Create employee API response is null."
+        );
+
+        int createStatus =
+                createResponse.getStatusCode();
+
+        System.out.println(
+                "CREATE STATUS: "
+                        + createStatus
         );
 
         System.out.println(
-                "Final GET API Status Code: "
-                        + employeeResponse.getStatusCode()
+                "CREATE RESPONSE:"
         );
-
-        // ========================================================
-        // PRINT GET RESPONSE
-        // ========================================================
-
-        String getResponseBody =
-                employeeResponse.asString();
 
         System.out.println(
-                "GET API Response:"
+                createResponse.asPrettyString()
         );
 
-        if (getResponseBody != null
-                && !getResponseBody.trim().isEmpty()) {
+        Assert.assertTrue(
+                createStatus == 200
+                        || createStatus == 201,
+                "Employee creation API failed. Status: "
+                        + createStatus
+        );
 
-            System.out.println(
-                    employeeResponse.asPrettyString()
-            );
+        // ========================================================
+        // CAPTURE EMPLOYEE NUMBER DIRECTLY FROM CREATE RESPONSE
+        // ========================================================
 
-        } else {
+        Integer employeeNumber = null;
 
-            System.out.println(
-                    "GET API returned an empty response body."
+        try {
+
+            employeeNumber =
+                    createResponse
+                            .jsonPath()
+                            .getInt("data.empNumber");
+
+        } catch (Exception e) {
+
+            Assert.fail(
+                    "Unable to extract empNumber from CREATE API response.",
+                    e
             );
         }
-
-        Assert.assertEquals(
-                employeeResponse.getStatusCode(),
-                200,
-                "Employee GET API failed."
-        );
-
-        // ========================================================
-        // FIND MATCHING EMPLOYEE
-        // ========================================================
-
-        String employeeId =
-                null;
-
-        Integer employeeNumber =
-                null;
-
-        int totalEmployees =
-                getDataSize(employeeResponse);
-
-        System.out.println(
-                "Employees returned by API: "
-                        + totalEmployees
-        );
-
-        // ========================================================
-        // SEARCH EMPLOYEE
-        // ========================================================
-
-        for (
-                int i = 0;
-                i < totalEmployees;
-                i++
-        ) {
-
-            String apiEmployeeId =
-                    getStringValue(
-                            employeeResponse,
-                            "data[" + i + "].employeeId"
-                    );
-
-            String apiFirstName =
-                    getStringValue(
-                            employeeResponse,
-                            "data[" + i + "].firstName"
-                    );
-
-            String apiMiddleName =
-                    getStringValue(
-                            employeeResponse,
-                            "data[" + i + "].middleName"
-                    );
-
-            String apiLastName =
-                    getStringValue(
-                            employeeResponse,
-                            "data[" + i + "].lastName"
-                    );
-
-            String apiEmpNumberText =
-                    getStringValue(
-                            employeeResponse,
-                            "data[" + i + "].empNumber"
-                    );
-
-            System.out.println(
-                    "API Employee "
-                            + (i + 1)
-                            + " : "
-                            + apiFirstName
-                            + " "
-                            + apiMiddleName
-                            + " "
-                            + apiLastName
-                            + " | Employee ID: "
-                            + apiEmployeeId
-                            + " | empNumber: "
-                            + apiEmpNumberText
-            );
-
-            // ====================================================
-            // MATCH USING FIRST NAME + LAST NAME
-            // ====================================================
-
-            boolean firstNameMatches =
-                    apiFirstName != null
-                            && apiFirstName.trim()
-                                    .equalsIgnoreCase(firstName);
-
-            boolean lastNameMatches =
-                    apiLastName != null
-                            && apiLastName.trim()
-                                    .equalsIgnoreCase(lastName);
-
-            if (firstNameMatches && lastNameMatches) {
-
-                employeeId =
-                        apiEmployeeId;
-
-                // =================================================
-                // EMPLOYEE ID CAN BE NULL IN ORANGEHRM
-                // =================================================
-
-                if (employeeId != null) {
-
-                    employeeId =
-                            employeeId.trim();
-
-                    if (employeeId.isEmpty()) {
-                        employeeId = null;
-                    }
-                }
-
-                // =================================================
-                // GET INTERNAL EMPLOYEE NUMBER
-                // =================================================
-
-                if (apiEmpNumberText != null
-                        && !apiEmpNumberText.trim().isEmpty()) {
-
-                    try {
-
-                        employeeNumber =
-                                Integer.valueOf(
-                                        apiEmpNumberText.trim()
-                                );
-
-                    } catch (NumberFormatException e) {
-
-                        Assert.fail(
-                                "Invalid empNumber received from API: "
-                                        + apiEmpNumberText
-                        );
-                    }
-                }
-
-                System.out.println(
-                        "================================================"
-                );
-
-                System.out.println(
-                        "MATCHING EMPLOYEE FOUND"
-                );
-
-                System.out.println(
-                        "Employee Name : "
-                                + employeeName
-                );
-
-                System.out.println(
-                        "Employee ID   : "
-                                + employeeId
-                );
-
-                System.out.println(
-                        "empNumber     : "
-                                + employeeNumber
-                );
-
-                System.out.println(
-                        "================================================"
-                );
-
-                break;
-            }
-        }
-
-        // ========================================================
-        // IMPORTANT:
-        //
-        // OrangeHRM may return employeeId = null.
-        //
-        // employeeId is NOT required for DELETE.
-        //
-        // empNumber is the actual identifier required by
-        // deleteEmployee().
-        // ========================================================
 
         Assert.assertNotNull(
                 employeeNumber,
-                "Matching API empNumber was not found for employee: "
-                        + employeeName
+                "Created employee empNumber is null."
+        );
+
+        Assert.assertTrue(
+                employeeNumber > 0,
+                "Created employee empNumber must be greater than zero."
         );
 
         System.out.println(
-                "Employee Number captured from API: "
+                "Internal Employee Number: "
                         + employeeNumber
         );
-
-        if (employeeId == null) {
-
-            System.out.println(
-                    "Employee ID is null. This is acceptable because "
-                            + "DELETE API uses empNumber."
-            );
-
-        } else {
-
-            System.out.println(
-                    "Employee ID captured from API: "
-                            + employeeId
-            );
-        }
 
         // ========================================================
         // VERIFY CREATED EMPLOYEE IN UI
         // ========================================================
 
+        System.out.println();
         System.out.println(
                 "================================================"
         );
@@ -435,20 +242,11 @@ public class EmployeeDeleteTest extends BaseTest {
                 "Created employee verified successfully in UI."
         );
 
-        System.out.println(
-                "Employee ID   : "
-                        + employeeId
-        );
-
-        System.out.println(
-                "empNumber     : "
-                        + employeeNumber
-        );
-
         // ========================================================
         // DELETE EMPLOYEE USING API
         // ========================================================
 
+        System.out.println();
         System.out.println(
                 "================================================"
         );
@@ -503,7 +301,7 @@ public class EmployeeDeleteTest extends BaseTest {
         }
 
         // ========================================================
-        // VERIFY DELETE API
+        // VERIFY DELETE API STATUS
         // ========================================================
 
         Assert.assertTrue(
@@ -518,9 +316,11 @@ public class EmployeeDeleteTest extends BaseTest {
         );
 
         // ========================================================
-        // VERIFY DELETION USING API
+        // VERIFY EMPLOYEE NO LONGER EXISTS
+        // USING SINGLE EMPLOYEE API
         // ========================================================
 
+        System.out.println();
         System.out.println(
                 "================================================"
         );
@@ -534,21 +334,23 @@ public class EmployeeDeleteTest extends BaseTest {
         );
 
         Response verificationResponse =
-                getEmployeeWithRetryAfterDelete(
-                        employeeApi,
+                employeeApi.getEmployee(
                         baseUrl,
-                        employeeName,
+                        String.valueOf(employeeNumber),
                         cookies
                 );
 
         Assert.assertNotNull(
                 verificationResponse,
-                "Delete verification GET response is null."
+                "Delete verification response is null."
         );
 
+        int verificationStatus =
+                verificationResponse.getStatusCode();
+
         System.out.println(
-                "Delete verification GET status: "
-                        + verificationResponse.getStatusCode()
+                "Delete verification status: "
+                        + verificationStatus
         );
 
         String verificationBody =
@@ -558,24 +360,27 @@ public class EmployeeDeleteTest extends BaseTest {
                 && !verificationBody.trim().isEmpty()) {
 
             System.out.println(
+                    "Delete verification response:"
+            );
+
+            System.out.println(
                     verificationResponse.asPrettyString()
             );
         }
 
         // ========================================================
-        // CHECK EMPLOYEE DOES NOT EXIST
+        // AFTER DELETE:
+        //
+        // Single employee endpoint should no longer return 200.
+        // Usually OrangeHRM returns 404.
         // ========================================================
 
-        boolean employeeStillExistsInApi =
-                containsEmployee(
-                        verificationResponse,
-                        employeeName
-                );
-
-        Assert.assertFalse(
-                employeeStillExistsInApi,
-                "Employee still exists in API after delete: "
-                        + employeeName
+        Assert.assertNotEquals(
+                verificationStatus,
+                200,
+                "Employee still exists in API after delete. "
+                        + "Employee Number: "
+                        + employeeNumber
         );
 
         System.out.println(
@@ -600,11 +405,6 @@ public class EmployeeDeleteTest extends BaseTest {
         );
 
         System.out.println(
-                "Employee ID     : "
-                        + employeeId
-        );
-
-        System.out.println(
                 "Employee Number : "
                         + employeeNumber
         );
@@ -620,394 +420,5 @@ public class EmployeeDeleteTest extends BaseTest {
         System.out.println(
                 "================================================"
         );
-    }
-
-    // ============================================================
-    // GET EMPLOYEE WITH RETRY
-    // ============================================================
-
-    private Response getEmployeeWithRetry(
-            EmployeeApi employeeApi,
-            String baseUrl,
-            String employeeName,
-            Map<String, String> cookies) {
-
-        final int maxAttempts =
-                12;
-
-        final long waitBetweenAttempts =
-                2000L;
-
-        Response lastResponse =
-                null;
-
-        for (
-                int attempt = 1;
-                attempt <= maxAttempts;
-                attempt++
-        ) {
-
-            System.out.println(
-                    "GET attempt "
-                            + attempt
-                            + " of "
-                            + maxAttempts
-            );
-
-            try {
-
-                lastResponse =
-                        employeeApi.getEmployeeByName(
-                                baseUrl,
-                                employeeName,
-                                cookies
-                        );
-
-                if (lastResponse == null) {
-
-                    System.out.println(
-                            "Attempt "
-                                    + attempt
-                                    + " returned null response."
-                    );
-
-                } else {
-
-                    System.out.println(
-                            "Attempt "
-                                    + attempt
-                                    + " status: "
-                                    + lastResponse.getStatusCode()
-                    );
-
-                    if (lastResponse.getStatusCode() == 200) {
-
-                        int count =
-                                getDataSize(
-                                        lastResponse
-                                );
-
-                        System.out.println(
-                                "Employees returned on attempt "
-                                        + attempt
-                                        + ": "
-                                        + count
-                        );
-
-                        boolean exists =
-                                containsEmployee(
-                                        lastResponse,
-                                        employeeName
-                                );
-
-                        System.out.println(
-                                "Created employee found on attempt "
-                                        + attempt
-                                        + ": "
-                                        + exists
-                        );
-
-                        if (exists) {
-
-                            System.out.println(
-                                    "Created employee is now available in GET API."
-                            );
-
-                            return lastResponse;
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-
-                System.out.println(
-                        "GET attempt "
-                                + attempt
-                                + " failed: "
-                                + e.getMessage()
-                );
-            }
-
-            if (attempt < maxAttempts) {
-
-                sleep(
-                        waitBetweenAttempts
-                );
-            }
-        }
-
-        return lastResponse;
-    }
-
-    // ============================================================
-    // GET EMPLOYEE AFTER DELETE WITH RETRY
-    // ============================================================
-
-    private Response getEmployeeWithRetryAfterDelete(
-            EmployeeApi employeeApi,
-            String baseUrl,
-            String employeeName,
-            Map<String, String> cookies) {
-
-        final int maxAttempts =
-                8;
-
-        final long waitBetweenAttempts =
-                2000L;
-
-        Response lastResponse =
-                null;
-
-        for (
-                int attempt = 1;
-                attempt <= maxAttempts;
-                attempt++
-        ) {
-
-            System.out.println(
-                    "DELETE verification GET attempt "
-                            + attempt
-                            + " of "
-                            + maxAttempts
-            );
-
-            try {
-
-                lastResponse =
-                        employeeApi.getEmployeeByName(
-                                baseUrl,
-                                employeeName,
-                                cookies
-                        );
-
-                if (lastResponse != null) {
-
-                    System.out.println(
-                            "Verification attempt "
-                                    + attempt
-                                    + " status: "
-                                    + lastResponse.getStatusCode()
-                    );
-
-                    if (lastResponse.getStatusCode() == 200) {
-
-                        boolean exists =
-                                containsEmployee(
-                                        lastResponse,
-                                        employeeName
-                                );
-
-                        System.out.println(
-                                "Employee exists after delete: "
-                                        + exists
-                        );
-
-                        if (!exists) {
-
-                            System.out.println(
-                                    "Employee deletion confirmed by API."
-                            );
-
-                            return lastResponse;
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-
-                System.out.println(
-                        "Delete verification attempt "
-                                + attempt
-                                + " failed: "
-                                + e.getMessage()
-                );
-            }
-
-            if (attempt < maxAttempts) {
-
-                sleep(
-                        waitBetweenAttempts
-                );
-            }
-        }
-
-        return lastResponse;
-    }
-
-    // ============================================================
-    // CHECK EMPLOYEE EXISTS IN API RESPONSE
-    // ============================================================
-
-    private boolean containsEmployee(
-            Response response,
-            String expectedEmployeeName) {
-
-        if (response == null) {
-            return false;
-        }
-
-        try {
-
-            int totalEmployees =
-                    getDataSize(response);
-
-            if (totalEmployees <= 0) {
-                return false;
-            }
-
-            String[] expectedParts =
-                    expectedEmployeeName
-                            .trim()
-                            .split("\\s+");
-
-            if (expectedParts.length < 2) {
-                return false;
-            }
-
-            String expectedFirstName =
-                    expectedParts[0];
-
-            String expectedLastName =
-                    expectedParts[
-                            expectedParts.length - 1
-                    ];
-
-            for (
-                    int i = 0;
-                    i < totalEmployees;
-                    i++
-            ) {
-
-                String firstName =
-                        getStringValue(
-                                response,
-                                "data[" + i + "].firstName"
-                        );
-
-                String lastName =
-                        getStringValue(
-                                response,
-                                "data[" + i + "].lastName"
-                        );
-
-                if (firstName != null
-                        && lastName != null
-                        && firstName.trim()
-                                .equalsIgnoreCase(
-                                        expectedFirstName
-                                )
-                        && lastName.trim()
-                                .equalsIgnoreCase(
-                                        expectedLastName
-                                )) {
-
-                    return true;
-                }
-            }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Error while checking API employee data: "
-                            + e.getMessage()
-            );
-        }
-
-        return false;
-    }
-
-    // ============================================================
-    // GET DATA SIZE SAFELY
-    // ============================================================
-
-    private int getDataSize(
-            Response response) {
-
-        if (response == null) {
-            return 0;
-        }
-
-        try {
-
-            Object data =
-                    response
-                            .jsonPath()
-                            .get("data");
-
-            if (data == null) {
-                return 0;
-            }
-
-            if (data instanceof java.util.List<?>) {
-
-                return (
-                        (java.util.List<?>) data
-                ).size();
-            }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Unable to read API data size: "
-                            + e.getMessage()
-            );
-        }
-
-        return 0;
-    }
-
-    // ============================================================
-    // GET STRING VALUE SAFELY
-    // ============================================================
-
-    private String getStringValue(
-            Response response,
-            String path) {
-
-        if (response == null) {
-            return null;
-        }
-
-        try {
-
-            Object value =
-                    response
-                            .jsonPath()
-                            .get(path);
-
-            if (value == null) {
-                return null;
-            }
-
-            return String.valueOf(value);
-
-        } catch (Exception e) {
-
-            return null;
-        }
-    }
-
-    // ============================================================
-    // SLEEP
-    // ============================================================
-
-    private void sleep(
-            long milliseconds) {
-
-        try {
-
-            Thread.sleep(
-                    milliseconds
-            );
-
-        } catch (InterruptedException e) {
-
-            Thread.currentThread().interrupt();
-
-            throw new RuntimeException(
-                    "Thread interrupted while waiting.",
-                    e
-            );
-        }
     }
 }

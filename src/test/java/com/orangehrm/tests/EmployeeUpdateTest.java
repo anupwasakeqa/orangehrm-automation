@@ -1,10 +1,15 @@
 package com.orangehrm.tests;
 
+import java.util.Map;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.orangehrm.api.EmployeeApi;
 import com.orangehrm.pages.EmployeePage;
 import com.orangehrm.pages.LoginPage;
+
+import io.restassured.response.Response;
 
 public class EmployeeUpdateTest extends BaseTest {
 
@@ -20,24 +25,45 @@ public class EmployeeUpdateTest extends BaseTest {
         // LOGIN
         // ========================================================
 
-        LoginPage loginPage =
-                new LoginPage(driver);
+        LoginPage loginPage = new LoginPage(driver);
 
         loginPage.login(
                 getUsername(),
                 getPassword()
         );
 
-        System.out.println(
-                "Login successful."
+        System.out.println("Login successful.");
+
+        // ========================================================
+        // OBJECTS
+        // ========================================================
+
+        EmployeePage employeePage = new EmployeePage(driver);
+        EmployeeApi employeeApi = new EmployeeApi();
+
+        // ========================================================
+        // COOKIES + BASE URL
+        // ========================================================
+
+        Map<String, String> cookies = getCookies();
+        String baseUrl = getBaseUrl();
+
+        Assert.assertNotNull(
+                baseUrl,
+                "Base URL is null."
         );
 
-        // ========================================================
-        // EMPLOYEE PAGE
-        // ========================================================
+        Assert.assertNotNull(
+                cookies,
+                "Authentication cookies are null."
+        );
 
-        EmployeePage employeePage =
-                new EmployeePage(driver);
+        Assert.assertFalse(
+                cookies.isEmpty(),
+                "Authentication cookies are empty."
+        );
+
+        System.out.println("Base URL: " + baseUrl);
 
         // ========================================================
         // UNIQUE EMPLOYEE DATA
@@ -77,53 +103,107 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // CREATE EMPLOYEE
+        // CREATE EMPLOYEE USING API
+        //
+        // IMPORTANT:
+        // API response gives us internal empNumber directly.
+        // No UI URL extraction required.
         // ========================================================
 
-        employeePage.createEmployee(
-                firstName,
-                middleName,
-                lastName
+        System.out.println();
+        System.out.println("================================================");
+        System.out.println("CREATING EMPLOYEE USING CREATE API");
+        System.out.println("================================================");
+
+        Response createResponse =
+                employeeApi.createEmployee(
+                        baseUrl,
+                        firstName,
+                        middleName,
+                        lastName,
+                        cookies
+                );
+
+        Assert.assertNotNull(
+                createResponse,
+                "Create employee API response is null."
+        );
+
+        int createStatus =
+                createResponse.getStatusCode();
+
+        System.out.println(
+                "CREATE STATUS: " + createStatus
         );
 
         System.out.println(
-                "Employee creation action completed."
+                "CREATE RESPONSE:"
+        );
+
+        System.out.println(
+                createResponse.asPrettyString()
+        );
+
+        Assert.assertTrue(
+                createStatus == 200
+                        || createStatus == 201,
+                "Employee creation API failed. Status: "
+                        + createStatus
         );
 
         // ========================================================
-        // CAPTURE EMPLOYEE NUMBER
+        // CAPTURE INTERNAL EMPLOYEE NUMBER FROM API
         // ========================================================
 
-        String employeeNumber =
-                employeePage.getCurrentEmployeeId();
+        Integer employeeNumber = null;
+
+        try {
+
+            employeeNumber =
+                    createResponse
+                            .jsonPath()
+                            .getInt("data.empNumber");
+
+        } catch (Exception e) {
+
+            Assert.fail(
+                    "Unable to extract empNumber from CREATE API response.",
+                    e
+            );
+        }
 
         Assert.assertNotNull(
                 employeeNumber,
                 "Generated Employee Number should not be null."
         );
 
-        Assert.assertFalse(
-                employeeNumber.trim().isEmpty(),
-                "Generated Employee Number should not be empty."
+        Assert.assertTrue(
+                employeeNumber > 0,
+                "Generated Employee Number should be greater than zero."
         );
 
         System.out.println(
-                "Created Employee Number: "
+                "Internal Employee Number: "
                         + employeeNumber
         );
 
         // ========================================================
-        // VERIFY CREATED EMPLOYEE
+        // VERIFY CREATED EMPLOYEE IN UI
         // ========================================================
+
+        System.out.println();
+        System.out.println("================================================");
+        System.out.println("VERIFYING CREATED EMPLOYEE IN UI");
+        System.out.println("================================================");
 
         boolean employeeExists =
                 employeePage.verifyEmployeeExistsByEmpNumber(
-                        employeeNumber
+                        String.valueOf(employeeNumber)
                 );
 
         Assert.assertTrue(
                 employeeExists,
-                "Created employee was not found using Employee Number: "
+                "Created employee was not found in UI using empNumber: "
                         + employeeNumber
         );
 
@@ -132,19 +212,13 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // NAVIGATE TO EMPLOYEE LIST
+        // OPEN EMPLOYEE LIST
         // ========================================================
 
         System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "NAVIGATING TO EMPLOYEE LIST"
-        );
-        System.out.println(
-                "================================================"
-        );
+        System.out.println("================================================");
+        System.out.println("OPENING EMPLOYEE LIST");
+        System.out.println("================================================");
 
         employeePage.clickPIM();
         employeePage.clickEmployeeList();
@@ -154,19 +228,13 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // SEARCH CREATED EMPLOYEE AND OPEN EDIT
+        // SEARCH CREATED EMPLOYEE
         // ========================================================
 
         System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "SEARCHING CREATED EMPLOYEE FOR EDIT"
-        );
-        System.out.println(
-                "================================================"
-        );
+        System.out.println("================================================");
+        System.out.println("SEARCHING CREATED EMPLOYEE FOR EDIT");
+        System.out.println("================================================");
 
         employeePage.clickEditEmployee(
                 firstName
@@ -232,19 +300,13 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // SUCCESS
+        // FINAL SUCCESS
         // ========================================================
 
         System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "EMPLOYEE UPDATE TEST PASSED"
-        );
-        System.out.println(
-                "================================================"
-        );
+        System.out.println("================================================");
+        System.out.println("EMPLOYEE UPDATE TEST PASSED");
+        System.out.println("================================================");
 
         System.out.println(
                 "Employee Number    : "
