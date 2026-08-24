@@ -1,12 +1,11 @@
 package com.orangehrm.tests;
 
-
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.orangehrm.pages.EmployeePage;
 import com.orangehrm.pages.LoginPage;
+
 public class EmployeeUpdateTest extends BaseTest {
 
     @Test
@@ -88,13 +87,47 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
+        // IMPORTANT:
+        // CREATE EMPLOYEE MAY LEAVE THE BROWSER ON
+        // /pim/addEmployee.
+        //
+        // Explicitly navigate back to Employee List
+        // before searching for the newly created employee.
+        // ========================================================
+
+        System.out.println();
+        System.out.println(
+                "================================================"
+        );
+        System.out.println(
+                "NAVIGATING TO EMPLOYEE LIST"
+        );
+        System.out.println(
+                "================================================"
+        );
+
+        employeePage.clickPIM();
+
+        employeePage.clickEmployeeList();
+
+        System.out.println(
+                "Employee List opened successfully."
+        );
+
+        // ========================================================
         // OPEN EMPLOYEE FOR EDIT
         // ========================================================
-        //
-        // Existing framework method searches employee by
-        // first name from Employee List and opens edit page.
-        //
-        // ========================================================
+
+        System.out.println();
+        System.out.println(
+                "================================================"
+        );
+        System.out.println(
+                "SEARCHING CREATED EMPLOYEE FOR EDIT"
+        );
+        System.out.println(
+                "================================================"
+        );
 
         employeePage.clickEditEmployee(
                 firstName

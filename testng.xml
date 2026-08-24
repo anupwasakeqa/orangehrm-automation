@@ -5,16 +5,12 @@
 
 <suite name="OrangeHRM Automation Suite">
 
-    <test name="OrangeHRM Test Suite">
-
-        <classes>
-
-            <class name="com.orangehrm.tests.LoginTest"/>
-            <class name="com.orangehrm.tests.EmployeeCreationTest"/>
-            <class name="com.orangehrm.tests.EmployeeUpdateTest"/>
-            <class name="com.orangehrm.tests.EmployeeDeleteTest"/>
-            <class name="com.orangehrm.tests.EmployeeApiTest"/>
-            <class name="com.orangehrm.tests.RoleValidationTest"/>
+    <test name="OrangeHRM Tests"> <classes> <class name="com.orangehrm.tests.LoginTest"/> 
+    <class name="com.orangehrm.tests.EmployeeCreationTest"/> 
+    <class name="com.orangehrm.tests.EmployeeUpdateTest"/>
+     <class name="com.orangehrm.tests.EmployeeDeleteTest"/>
+      <class name="com.orangehrm.tests.EmployeeApiTest"/> 
+      <class name="com.orangehrm.tests.RoleValidationTest"/>
 
         </classes>
 
