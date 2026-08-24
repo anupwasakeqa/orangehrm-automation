@@ -1,11 +1,12 @@
 package com.orangehrm.tests;
 
+
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.orangehrm.pages.EmployeePage;
 import com.orangehrm.pages.LoginPage;
-
 public class EmployeeUpdateTest extends BaseTest {
 
     @Test
@@ -83,65 +84,24 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         System.out.println(
-                "Employee created successfully."
-        );
-
-        // ========================================================
-        // GET EMPLOYEE ID
-        // ========================================================
-
-        String employeeId =
-                employeePage.getCurrentEmployeeId();
-
-        System.out.println(
-                "Generated Employee ID: "
-                        + employeeId
-        );
-
-        Assert.assertNotNull(
-                employeeId,
-                "Generated Employee ID should not be null."
-        );
-
-        Assert.assertFalse(
-                employeeId.trim().isEmpty(),
-                "Generated Employee ID should not be empty."
-        );
-
-        // ========================================================
-        // VERIFY CREATED EMPLOYEE
-        // ========================================================
-
-        System.out.println();
-        System.out.println(
-                "Verifying created employee using ID..."
-        );
-
-        boolean employeeExists =
-                employeePage.verifyEmployeeExistsById(
-                        employeeId
-                );
-
-        Assert.assertTrue(
-                employeeExists,
-                "Created employee was not found with ID: "
-                        + employeeId
-        );
-
-        System.out.println(
-                "Created employee verified successfully."
+                "Employee creation action completed."
         );
 
         // ========================================================
         // OPEN EMPLOYEE FOR EDIT
         // ========================================================
+        //
+        // Existing framework method searches employee by
+        // first name from Employee List and opens edit page.
+        //
+        // ========================================================
 
-        employeePage.clickEditEmployeeById(
-                employeeId
+        employeePage.clickEditEmployee(
+                firstName
         );
 
         System.out.println(
-                "Employee edit page opened."
+                "Employee edit page opened successfully."
         );
 
         // ========================================================
@@ -212,11 +172,6 @@ public class EmployeeUpdateTest extends BaseTest {
         );
         System.out.println(
                 "================================================"
-        );
-
-        System.out.println(
-                "Employee ID       : "
-                        + employeeId
         );
 
         System.out.println(

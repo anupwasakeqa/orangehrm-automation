@@ -15,6 +15,7 @@ import com.orangehrm.listeners.TestListener;
 import com.orangehrm.utils.ConfigReader;
 
 @Listeners(TestListener.class)
+
 public class BaseTest {
 
     protected WebDriver driver;
