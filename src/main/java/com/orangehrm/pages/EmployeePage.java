@@ -101,6 +101,12 @@ public class EmployeePage {
                     "//div[contains(@class,'oxd-table-row')]"
             );
 
+    // More flexible row locator
+    private final By tableBody =
+            By.xpath(
+                    "//div[contains(@class,'oxd-table-body')]"
+            );
+
     // =========================================================
     // CLICK PIM
     // =========================================================
@@ -121,9 +127,7 @@ public class EmployeePage {
         scrollIntoView(pim);
 
         try {
-
             pim.click();
-
         } catch (Exception e) {
 
             JavascriptExecutor js =
@@ -168,9 +172,7 @@ public class EmployeePage {
         scrollIntoView(employeeList);
 
         try {
-
             employeeList.click();
-
         } catch (Exception e) {
 
             JavascriptExecutor js =
@@ -215,9 +217,7 @@ public class EmployeePage {
         scrollIntoView(add);
 
         try {
-
             add.click();
-
         } catch (Exception e) {
 
             JavascriptExecutor js =
@@ -275,18 +275,11 @@ public class EmployeePage {
                 "================================================"
         );
 
-        // -----------------------------------------------------
-        // NAVIGATE TO ADD EMPLOYEE
-        // -----------------------------------------------------
-
         clickPIM();
         clickEmployeeList();
         clickAddEmployee();
 
-        // -----------------------------------------------------
         // FIRST NAME
-        // -----------------------------------------------------
-
         WebElement firstNameElement =
                 wait.until(
                         ExpectedConditions.visibilityOfElementLocated(
@@ -295,15 +288,9 @@ public class EmployeePage {
                 );
 
         firstNameElement.clear();
+        firstNameElement.sendKeys(firstName);
 
-        firstNameElement.sendKeys(
-                firstName
-        );
-
-        // -----------------------------------------------------
         // MIDDLE NAME
-        // -----------------------------------------------------
-
         WebElement middleNameElement =
                 wait.until(
                         ExpectedConditions.visibilityOfElementLocated(
@@ -316,15 +303,10 @@ public class EmployeePage {
         if (middleName != null
                 && !middleName.trim().isEmpty()) {
 
-            middleNameElement.sendKeys(
-                    middleName
-            );
+            middleNameElement.sendKeys(middleName);
         }
 
-        // -----------------------------------------------------
         // LAST NAME
-        // -----------------------------------------------------
-
         WebElement lastNameElement =
                 wait.until(
                         ExpectedConditions.visibilityOfElementLocated(
@@ -333,19 +315,13 @@ public class EmployeePage {
                 );
 
         lastNameElement.clear();
-
-        lastNameElement.sendKeys(
-                lastName
-        );
+        lastNameElement.sendKeys(lastName);
 
         System.out.println(
                 "Employee details entered successfully."
         );
 
-        // -----------------------------------------------------
         // SAVE
-        // -----------------------------------------------------
-
         waitForLoaderToDisappear();
 
         WebElement save =
@@ -371,10 +347,6 @@ public class EmployeePage {
 
         sleep(500);
 
-        System.out.println(
-                "Employee Save button is ready to click."
-        );
-
         try {
 
             save.click();
@@ -382,11 +354,8 @@ public class EmployeePage {
         } catch (Exception e) {
 
             System.out.println(
-                    "Normal Save click failed. " +
-                    "Retrying with JavaScript..."
+                    "Normal Save click failed. Using JavaScript..."
             );
-
-            waitForLoaderToDisappear();
 
             JavascriptExecutor js =
                     (JavascriptExecutor) driver;
@@ -400,10 +369,6 @@ public class EmployeePage {
         System.out.println(
                 "Employee Save button clicked."
         );
-
-        // -----------------------------------------------------
-        // WAIT FOR SAVE OPERATION
-        // -----------------------------------------------------
 
         waitForLoaderToDisappear();
 
@@ -446,7 +411,10 @@ public class EmployeePage {
 
         try {
 
-            wait.until(
+            new WebDriverWait(
+                    driver,
+                    Duration.ofSeconds(10)
+            ).until(
                     ExpectedConditions.urlContains(
                             "/pim/viewPersonalDetails/empNumber/"
                     )
@@ -454,11 +422,6 @@ public class EmployeePage {
 
             String currentUrl =
                     driver.getCurrentUrl();
-
-            System.out.println(
-                    "Current URL: "
-                            + currentUrl
-            );
 
             String marker =
                     "/empNumber/";
@@ -490,14 +453,11 @@ public class EmployeePage {
         } catch (Exception e) {
 
             System.out.println(
-                    "Employee number was not found from URL."
+                    "URL based Employee ID capture failed."
             );
         }
 
-        // -----------------------------------------------------
-        // FALLBACK - EMPLOYEE ID FIELD
-        // -----------------------------------------------------
-
+        // FALLBACK
         try {
 
             WebElement idField =
@@ -546,17 +506,6 @@ public class EmployeePage {
     public boolean verifyEmployeeExistsById(
             String employeeId) {
 
-        System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "VERIFYING EMPLOYEE EXISTS BY ID"
-        );
-        System.out.println(
-                "================================================"
-        );
-
         try {
 
             if (employeeId == null
@@ -565,50 +514,29 @@ public class EmployeePage {
                 return false;
             }
 
-            employeeId =
-                    employeeId.trim();
-
-            openEmployeeById(
-                    employeeId
-            );
+            openEmployeeById(employeeId);
 
             String currentUrl =
                     driver.getCurrentUrl();
 
-            System.out.println(
-                    "Employee details URL: "
-                            + currentUrl
-            );
-
             if (!currentUrl.contains(
                     "/pim/viewPersonalDetails/empNumber/"
-                            + employeeId
-            )) {
+                            + employeeId)) {
 
                 return false;
             }
 
-            WebElement firstName =
-                    wait.until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    firstNameField
-                            )
-                    );
+            wait.until(
+                    ExpectedConditions.visibilityOfElementLocated(
+                            firstNameField
+                    )
+            );
 
-            WebElement lastName =
-                    wait.until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    lastNameField
-                            )
-                    );
-
-            if (!firstName.isDisplayed()) {
-                return false;
-            }
-
-            if (!lastName.isDisplayed()) {
-                return false;
-            }
+            wait.until(
+                    ExpectedConditions.visibilityOfElementLocated(
+                            lastNameField
+                    )
+            );
 
             System.out.println(
                     "EMPLOYEE FOUND SUCCESSFULLY"
@@ -619,11 +547,7 @@ public class EmployeePage {
         } catch (Exception e) {
 
             System.out.println(
-                    "Employee verification failed."
-            );
-
-            System.out.println(
-                    "Reason: "
+                    "Employee verification failed: "
                             + e.getMessage()
             );
 
@@ -638,119 +562,15 @@ public class EmployeePage {
     public boolean verifyEmployeeExistsByEmpNumber(
             String empNumber) {
 
-        System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "VERIFYING EMPLOYEE EXISTS BY EMP NUMBER"
-        );
-        System.out.println(
-                "================================================"
-        );
-
-        try {
-
-            if (empNumber == null
-                    || empNumber.trim().isEmpty()) {
-
-                return false;
-            }
-
-            empNumber =
-                    empNumber.trim();
-
-            openEmployeeById(
-                    empNumber
-            );
-
-            String currentUrl =
-                    driver.getCurrentUrl();
-
-            System.out.println(
-                    "Employee details URL: "
-                            + currentUrl
-            );
-
-            if (!currentUrl.contains(
-                    "/pim/viewPersonalDetails/empNumber/"
-                            + empNumber
-            )) {
-
-                return false;
-            }
-
-            WebElement firstName =
-                    wait.until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    firstNameField
-                            )
-                    );
-
-            WebElement lastName =
-                    wait.until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    lastNameField
-                            )
-                    );
-
-            if (!firstName.isDisplayed()) {
-                return false;
-            }
-
-            if (!lastName.isDisplayed()) {
-                return false;
-            }
-
-            System.out.println();
-            System.out.println(
-                    "================================================"
-            );
-            System.out.println(
-                    "EMPLOYEE FOUND SUCCESSFULLY"
-            );
-            System.out.println(
-                    "Employee Number: "
-                            + empNumber
-            );
-            System.out.println(
-                    "================================================"
-            );
-
-            return true;
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Employee verification failed."
-            );
-
-            System.out.println(
-                    "Reason: "
-                            + e.getMessage()
-            );
-
-            return false;
-        }
+        return verifyEmployeeExistsById(empNumber);
     }
 
     // =========================================================
-    // OPEN EMPLOYEE BY EMP NUMBER
+    // OPEN EMPLOYEE BY INTERNAL EMP NUMBER
     // =========================================================
 
     public void openEmployeeById(
             String employeeId) {
-
-        System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "OPEN EMPLOYEE BY INTERNAL EMP NUMBER"
-        );
-        System.out.println(
-                "================================================"
-        );
 
         if (employeeId == null
                 || employeeId.trim().isEmpty()) {
@@ -766,16 +586,7 @@ public class EmployeePage {
         String currentUrl =
                 driver.getCurrentUrl();
 
-        System.out.println(
-                "Current URL: "
-                        + currentUrl
-        );
-
         String baseUrl;
-
-        // -----------------------------------------------------
-        // EXTRACT BASE URL
-        // -----------------------------------------------------
 
         if (currentUrl.contains("/web/")) {
 
@@ -801,10 +612,6 @@ public class EmployeePage {
             );
         }
 
-        // -----------------------------------------------------
-        // DIRECT EMPLOYEE URL
-        // -----------------------------------------------------
-
         String employeeUrl =
                 baseUrl
                         + "/web/index.php/pim/"
@@ -816,13 +623,7 @@ public class EmployeePage {
                         + employeeUrl
         );
 
-        driver.get(
-                employeeUrl
-        );
-
-        // -----------------------------------------------------
-        // WAIT FOR CORRECT URL
-        // -----------------------------------------------------
+        driver.get(employeeUrl);
 
         wait.until(
                 ExpectedConditions.urlContains(
@@ -830,10 +631,6 @@ public class EmployeePage {
                                 + employeeId
                 )
         );
-
-        // -----------------------------------------------------
-        // WAIT FOR DETAILS FORM
-        // -----------------------------------------------------
 
         wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
@@ -861,63 +658,7 @@ public class EmployeePage {
     public void clickEditEmployeeById(
             String employeeId) {
 
-        System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "OPENING EMPLOYEE FOR EDIT BY ID"
-        );
-        System.out.println(
-                "================================================"
-        );
-
-        if (employeeId == null
-                || employeeId.trim().isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Employee ID cannot be null or empty."
-            );
-        }
-
-        employeeId =
-                employeeId.trim();
-
-        openEmployeeById(
-                employeeId
-        );
-
-        WebElement firstName =
-                wait.until(
-                        ExpectedConditions.visibilityOfElementLocated(
-                                firstNameField
-                        )
-                );
-
-        WebElement lastName =
-                wait.until(
-                        ExpectedConditions.visibilityOfElementLocated(
-                                lastNameField
-                        )
-                );
-
-        if (!firstName.isDisplayed()) {
-
-            throw new RuntimeException(
-                    "First Name field is not displayed "
-                            + "for employee ID: "
-                            + employeeId
-            );
-        }
-
-        if (!lastName.isDisplayed()) {
-
-            throw new RuntimeException(
-                    "Last Name field is not displayed "
-                            + "for employee ID: "
-                            + employeeId
-            );
-        }
+        openEmployeeById(employeeId);
 
         System.out.println(
                 "Employee edit page opened successfully."
@@ -937,17 +678,6 @@ public class EmployeePage {
     public void searchEmployeeById(
             String employeeId) {
 
-        System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "SEARCHING EMPLOYEE BY ID"
-        );
-        System.out.println(
-                "================================================"
-        );
-
         if (employeeId == null
                 || employeeId.trim().isEmpty()) {
 
@@ -963,7 +693,7 @@ public class EmployeePage {
             clickEmployeeList();
         }
 
-        waitForLoaderToDisappear();
+        waitForEmployeeListReady();
 
         WebElement idField =
                 wait.until(
@@ -975,18 +705,11 @@ public class EmployeePage {
         scrollIntoView(idField);
 
         idField.click();
-
         idField.clear();
+        idField.sendKeys(employeeId);
+        idField.sendKeys(Keys.TAB);
 
-        idField.sendKeys(
-                employeeId
-        );
-
-        idField.sendKeys(
-                Keys.TAB
-        );
-
-        sleep(500);
+        sleep(300);
 
         WebElement search =
                 wait.until(
@@ -996,12 +719,11 @@ public class EmployeePage {
                 );
 
         scrollIntoView(search);
-
         search.click();
 
         waitForLoaderToDisappear();
 
-        sleep(1000);
+        sleep(800);
 
         System.out.println(
                 "Employee ID search completed."
@@ -1017,59 +739,12 @@ public class EmployeePage {
 
         try {
 
-            if (employeeId == null
-                    || employeeId.trim().isEmpty()) {
+            searchEmployeeById(employeeId);
 
-                return false;
-            }
-
-            searchEmployeeById(
-                    employeeId
-            );
-
-            WebDriverWait shortWait =
-                    new WebDriverWait(
-                            driver,
-                            Duration.ofSeconds(15)
-                    );
-
-            return shortWait.until(
-                    driver -> {
-
-                        List<WebElement> rows =
-                                driver.findElements(
-                                        tableRows
-                                );
-
-                        for (WebElement row : rows) {
-
-                            try {
-
-                                if (!row.isDisplayed()) {
-                                    continue;
-                                }
-
-                                String rowText =
-                                        normalizeText(
-                                                row.getText()
-                                        );
-
-                                if (rowText.contains(
-                                        employeeId
-                                )) {
-
-                                    return true;
-                                }
-
-                            } catch (Exception e) {
-
-                                // Ignore stale row
-                            }
-                        }
-
-                        return false;
-                    }
-            );
+            return findEmployeeRowByText(
+                    employeeId,
+                    15
+            ) != null;
 
         } catch (Exception e) {
 
@@ -1084,7 +759,6 @@ public class EmployeePage {
 
     // =========================================================
     // CLICK EDIT EMPLOYEE BY FIRST NAME
-    // ROBUST AUTOCOMPLETE VERSION
     // =========================================================
 
     public void clickEditEmployee(
@@ -1101,11 +775,6 @@ public class EmployeePage {
                 "================================================"
         );
 
-        System.out.println(
-                "Employee First Name: "
-                        + firstName
-        );
-
         if (firstName == null
                 || firstName.trim().isEmpty()) {
 
@@ -1117,6 +786,11 @@ public class EmployeePage {
         final String searchFirstName =
                 firstName.trim();
 
+        System.out.println(
+                "Employee First Name: "
+                        + searchFirstName
+        );
+
         // =====================================================
         // OPEN EMPLOYEE LIST
         // =====================================================
@@ -1124,35 +798,18 @@ public class EmployeePage {
         if (!driver.getCurrentUrl()
                 .contains("/pim/viewEmployeeList")) {
 
-            System.out.println(
-                    "Employee List is not open."
-            );
-
             clickPIM();
-
             clickEmployeeList();
         }
 
         // =====================================================
-        // WAIT FOR EMPLOYEE LIST PAGE
+        // WAIT FOR LIST PAGE
         // =====================================================
 
-        wait.until(
-                ExpectedConditions.urlContains(
-                        "/pim/viewEmployeeList"
-                )
-        );
-
-        waitForLoaderToDisappear();
-
-        sleep(1500);
-
-        System.out.println(
-                "Employee List page is ready."
-        );
+        waitForEmployeeListReady();
 
         // =====================================================
-        // EMPLOYEE NAME SEARCH FIELD
+        // SEARCH EMPLOYEE
         // =====================================================
 
         WebElement employeeNameField =
@@ -1162,94 +819,20 @@ public class EmployeePage {
                         )
                 );
 
-        scrollIntoView(
-                employeeNameField
-        );
+        scrollIntoView(employeeNameField);
 
         employeeNameField.click();
-
-        employeeNameField.sendKeys(
-                Keys.CONTROL,
-                "a"
-        );
+        employeeNameField.clear();
 
         employeeNameField.sendKeys(
                 searchFirstName
         );
 
-        System.out.println(
-                "Employee name entered: "
-                        + searchFirstName
+        employeeNameField.sendKeys(
+                Keys.TAB
         );
 
-        // =====================================================
-        // WAIT FOR AUTOCOMPLETE SUGGESTION
-        // =====================================================
-
-        By employeeSuggestion =
-                By.xpath(
-                        "//div[contains(@class,'oxd-autocomplete-option')]" +
-                        "//span[contains(" +
-                        "translate(normalize-space(.)," +
-                        "'ABCDEFGHIJKLMNOPQRSTUVWXYZ'," +
-                        "'abcdefghijklmnopqrstuvwxyz')," +
-                        "translate('" + searchFirstName + "'," +
-                        "'ABCDEFGHIJKLMNOPQRSTUVWXYZ'," +
-                        "'abcdefghijklmnopqrstuvwxyz')" +
-                        ")]"
-                );
-
-        try {
-
-            WebElement suggestion =
-                    new WebDriverWait(
-                            driver,
-                            Duration.ofSeconds(10)
-                    ).until(
-                            ExpectedConditions.visibilityOfElementLocated(
-                                    employeeSuggestion
-                            )
-                    );
-
-            System.out.println(
-                    "Employee autocomplete suggestion found: "
-                            + suggestion.getText()
-            );
-
-            scrollIntoView(
-                    suggestion
-            );
-
-            suggestion.click();
-
-            System.out.println(
-                    "Employee autocomplete suggestion selected."
-            );
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Autocomplete suggestion was not selected."
-            );
-
-            System.out.println(
-                    "Trying keyboard selection..."
-            );
-
-            employeeNameField.sendKeys(
-                    Keys.ARROW_DOWN
-            );
-
-            employeeNameField.sendKeys(
-                    Keys.ENTER
-            );
-
-            sleep(500);
-        }
-
-        // =====================================================
-        // CLICK SEARCH
-        // =====================================================
+        sleep(300);
 
         WebElement search =
                 wait.until(
@@ -1258,9 +841,7 @@ public class EmployeePage {
                         )
                 );
 
-        scrollIntoView(
-                search
-        );
+        scrollIntoView(search);
 
         search.click();
 
@@ -1274,18 +855,313 @@ public class EmployeePage {
 
         waitForLoaderToDisappear();
 
-        sleep(1500);
+        sleep(1000);
 
         // =====================================================
-        // FIND EMPLOYEE ROW
+        // ROBUST EMPLOYEE ROW SEARCH
         // =====================================================
 
         WebElement employeeRow =
+                findEmployeeRowByText(
+                        searchFirstName,
+                        30
+                );
+
+        if (employeeRow == null) {
+
+            System.out.println(
+                    "Employee row not found after first search."
+            );
+
+            // -------------------------------------------------
+            // RETRY SEARCH ONCE
+            // -------------------------------------------------
+
+            System.out.println(
+                    "Retrying employee search..."
+            );
+
+            retryEmployeeNameSearch(
+                    searchFirstName
+            );
+
+            employeeRow =
+                    findEmployeeRowByText(
+                            searchFirstName,
+                            20
+                    );
+        }
+
+        if (employeeRow == null) {
+
+            throw new RuntimeException(
+                    "Employee row not found after search. "
+                            + "Employee Name: "
+                            + searchFirstName
+                            + " | Current URL: "
+                            + driver.getCurrentUrl()
+            );
+        }
+
+        System.out.println(
+                "Matching employee row found."
+        );
+
+        System.out.println(
+                "Row Text: "
+                        + normalizeText(
+                                employeeRow.getText()
+                        )
+        );
+
+        // =====================================================
+        // FIND EDIT BUTTON
+        // =====================================================
+
+        By editButtonLocator =
+                By.xpath(
+                        ".//button[@type='button']" +
+                        "[.//i[contains(@class," +
+                        "'bi-pencil-fill')]]"
+                );
+
+        WebElement editButton = null;
+
+        try {
+
+            editButton =
+                    employeeRow.findElement(
+                            editButtonLocator
+                    );
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Pencil locator did not find edit button."
+            );
+
+            // Fallback: find buttons in row
+            List<WebElement> buttons =
+                    employeeRow.findElements(
+                            By.xpath(
+                                    ".//button"
+                            )
+                    );
+
+            for (WebElement button : buttons) {
+
+                try {
+
+                    if (button.isDisplayed()
+                            && button.isEnabled()) {
+
+                        String ariaLabel =
+                                button.getAttribute(
+                                        "aria-label"
+                                );
+
+                        String title =
+                                button.getAttribute(
+                                        "title"
+                                );
+
+                        String className =
+                                button.getAttribute(
+                                        "class"
+                                );
+
+                        if ((ariaLabel != null
+                                && ariaLabel
+                                        .toLowerCase()
+                                        .contains("edit"))
+                                ||
+                                (title != null
+                                        && title
+                                        .toLowerCase()
+                                        .contains("edit"))
+                                ||
+                                (className != null
+                                        && className
+                                        .contains(
+                                                "bi-pencil"
+                                        ))) {
+
+                            editButton = button;
+                            break;
+                        }
+                    }
+
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if (editButton == null) {
+
+            throw new RuntimeException(
+                    "Edit button not found for employee: "
+                            + searchFirstName
+            );
+        }
+
+        // =====================================================
+        // CLICK EDIT
+        // =====================================================
+
+        scrollIntoView(editButton);
+
+        sleep(300);
+
+        try {
+
+            wait.until(
+                    ExpectedConditions.elementToBeClickable(
+                            editButton
+                    )
+            );
+
+            editButton.click();
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Normal Edit click failed. "
+                            + "Using JavaScript."
+            );
+
+            JavascriptExecutor js =
+                    (JavascriptExecutor) driver;
+
+            js.executeScript(
+                    "arguments[0].click();",
+                    editButton
+            );
+        }
+
+        System.out.println(
+                "Edit button clicked successfully."
+        );
+
+        // =====================================================
+        // WAIT FOR PERSONAL DETAILS
+        // =====================================================
+
+        wait.until(
+                ExpectedConditions.urlContains(
+                        "/pim/viewPersonalDetails"
+                )
+        );
+
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        firstNameField
+                )
+        );
+
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        lastNameField
+                )
+        );
+
+        waitForLoaderToDisappear();
+
+        System.out.println(
+                "Employee edit page opened successfully."
+        );
+
+        System.out.println(
+                "Current URL: "
+                        + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+                "Employee is ready for update."
+        );
+    }
+
+    // =========================================================
+    // RETRY EMPLOYEE NAME SEARCH
+    // =========================================================
+
+    private void retryEmployeeNameSearch(
+            String firstName) {
+
+        try {
+
+            WebElement nameField =
+                    wait.until(
+                            ExpectedConditions.elementToBeClickable(
+                                    employeeNameSearchField
+                            )
+                    );
+
+            scrollIntoView(nameField);
+
+            nameField.click();
+
+            nameField.sendKeys(
+                    Keys.CONTROL,
+                    "a"
+            );
+
+            nameField.sendKeys(firstName);
+
+            nameField.sendKeys(Keys.TAB);
+
+            sleep(300);
+
+            WebElement search =
+                    wait.until(
+                            ExpectedConditions.elementToBeClickable(
+                                    searchButton
+                            )
+                    );
+
+            scrollIntoView(search);
+
+            search.click();
+
+            waitForLoaderToDisappear();
+
+            sleep(1500);
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Employee search retry failed: "
+                            + e.getMessage()
+            );
+        }
+    }
+
+    // =========================================================
+    // FIND EMPLOYEE ROW BY TEXT
+    // =========================================================
+
+    private WebElement findEmployeeRowByText(
+            String searchText,
+            int timeoutSeconds) {
+
+        final String expectedText =
+                searchText
+                        .trim()
+                        .toLowerCase();
+
+        WebDriverWait rowWait =
                 new WebDriverWait(
                         driver,
-                        Duration.ofSeconds(30)
-                ).until(
-                        driver -> {
+                        Duration.ofSeconds(
+                                timeoutSeconds
+                        )
+                );
+
+        try {
+
+            return rowWait.until(
+                    driver -> {
+
+                        try {
 
                             List<WebElement> rows =
                                     driver.findElements(
@@ -1293,7 +1169,7 @@ public class EmployeePage {
                                     );
 
                             System.out.println(
-                                    "Current employee table rows: "
+                                    "Employee table rows found: "
                                             + rows.size()
                             );
 
@@ -1311,127 +1187,52 @@ public class EmployeePage {
                                             );
 
                                     System.out.println(
-                                            "Employee row found: "
+                                            "Checking row: "
                                                     + rowText
                                     );
 
                                     if (rowText
                                             .toLowerCase()
                                             .contains(
-                                                    searchFirstName
-                                                            .toLowerCase()
+                                                    expectedText
                                             )) {
 
                                         return row;
                                     }
 
-                                } catch (Exception e) {
-
-                                    // Ignore stale rows
+                                } catch (Exception ignored) {
+                                    // stale row - continue
                                 }
                             }
 
                             return null;
+
+                        } catch (Exception e) {
+
+                            return null;
                         }
-                );
-
-        if (employeeRow == null) {
-
-            throw new RuntimeException(
-                    "Employee row not found for employee: "
-                            + searchFirstName
+                    }
             );
-        }
-
-        System.out.println(
-                "Matching employee row located successfully."
-        );
-
-        // =====================================================
-        // FIND EDIT BUTTON
-        // =====================================================
-
-        By editButtonLocator =
-                By.xpath(
-                        ".//button[@type='button']" +
-                        "[.//i[contains(@class,'bi-pencil-fill')]]"
-                );
-
-        WebElement editButton;
-
-        try {
-
-            editButton =
-                    employeeRow.findElement(
-                            editButtonLocator
-                    );
 
         } catch (Exception e) {
 
             System.out.println(
-                    "Pencil edit button not found using first locator."
+                    "Employee row wait timed out."
             );
 
-            By fallbackEditButton =
-                    By.xpath(
-                            ".//button[contains(@class,'oxd-icon-button')]" +
-                            "[.//i[contains(@class,'bi-pencil')]]"
-                    );
-
-            editButton =
-                    employeeRow.findElement(
-                            fallbackEditButton
-                    );
+            return null;
         }
+    }
 
-        // =====================================================
-        // CLICK EDIT
-        // =====================================================
+    // =========================================================
+    // WAIT FOR EMPLOYEE LIST READY
+    // =========================================================
 
-        scrollIntoView(
-                editButton
-        );
-
-        wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        editButton
-                )
-        );
-
-        try {
-
-            editButton.click();
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Normal edit button click failed."
-            );
-
-            System.out.println(
-                    "Trying JavaScript click..."
-            );
-
-            JavascriptExecutor js =
-                    (JavascriptExecutor) driver;
-
-            js.executeScript(
-                    "arguments[0].click();",
-                    editButton
-            );
-        }
-
-        System.out.println(
-                "Edit button clicked successfully."
-        );
-
-        // =====================================================
-        // WAIT FOR PERSONAL DETAILS PAGE
-        // =====================================================
+    private void waitForEmployeeListReady() {
 
         wait.until(
                 ExpectedConditions.urlContains(
-                        "/pim/viewPersonalDetails"
+                        "/pim/viewEmployeeList"
                 )
         );
 
@@ -1439,32 +1240,17 @@ public class EmployeePage {
 
         wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        firstNameField
+                        employeeNameSearchField
                 )
         );
 
         wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        lastNameField
+                        searchButton
                 )
         );
 
-        System.out.println(
-                "Employee edit page opened successfully."
-        );
-
-        System.out.println(
-                "Current URL: "
-                        + driver.getCurrentUrl()
-        );
-
-        System.out.println(
-                "Employee is ready for update."
-        );
-
-        System.out.println(
-                "================================================"
-        );
+        sleep(500);
     }
 
     // =========================================================
@@ -1574,8 +1360,7 @@ public class EmployeePage {
                         personalDetailsSave
                 );
 
-        for (WebElement button :
-                saveButtons) {
+        for (WebElement button : saveButtons) {
 
             try {
 
@@ -1583,19 +1368,12 @@ public class EmployeePage {
                         && button.isEnabled()) {
 
                     save = button;
-
                     break;
                 }
 
-            } catch (Exception e) {
-
-                // Ignore
+            } catch (Exception ignored) {
             }
         }
-
-        // -----------------------------------------------------
-        // FALLBACK
-        // -----------------------------------------------------
 
         if (save == null) {
 
@@ -1606,8 +1384,7 @@ public class EmployeePage {
                             )
                     );
 
-            for (WebElement button :
-                    allSaveButtons) {
+            for (WebElement button : allSaveButtons) {
 
                 try {
 
@@ -1615,13 +1392,10 @@ public class EmployeePage {
                             && button.isEnabled()) {
 
                         save = button;
-
                         break;
                     }
 
-                } catch (Exception e) {
-
-                    // Ignore
+                } catch (Exception ignored) {
                 }
             }
         }
@@ -1632,10 +1406,6 @@ public class EmployeePage {
                     "No usable Save button found."
             );
         }
-
-        // -----------------------------------------------------
-        // CLICK
-        // -----------------------------------------------------
 
         scrollIntoView(save);
 
@@ -1654,8 +1424,7 @@ public class EmployeePage {
         } catch (Exception e) {
 
             System.out.println(
-                    "Normal Save click failed. "
-                            + "Trying JavaScript."
+                    "Normal Save click failed. Trying JavaScript."
             );
 
             JavascriptExecutor js =
@@ -1699,16 +1468,6 @@ public class EmployeePage {
         );
         System.out.println(
                 "================================================"
-        );
-
-        System.out.println(
-                "Expected First Name: "
-                        + expectedFirstName
-        );
-
-        System.out.println(
-                "Expected Last Name: "
-                        + expectedLastName
         );
 
         try {
@@ -1805,13 +1564,9 @@ public class EmployeePage {
             String newFirstName,
             String newLastName) {
 
-        updateFirstName(
-                newFirstName
-        );
+        updateFirstName(newFirstName);
 
-        updateLastName(
-                newLastName
-        );
+        updateLastName(newLastName);
 
         clickSave();
 
@@ -1840,9 +1595,10 @@ public class EmployeePage {
                 .contains("/pim/viewEmployeeList")) {
 
             clickPIM();
-
             clickEmployeeList();
         }
+
+        waitForEmployeeListReady();
 
         By employeeRow =
                 By.xpath(
@@ -1873,9 +1629,7 @@ public class EmployeePage {
                 );
 
         WebElement delete =
-                row.findElement(
-                        deleteButton
-                );
+                row.findElement(deleteButton);
 
         wait.until(
                 ExpectedConditions.elementToBeClickable(
@@ -1920,93 +1674,64 @@ public class EmployeePage {
                 .contains("/pim/viewEmployeeList")) {
 
             clickPIM();
-
             clickEmployeeList();
         }
+
+        waitForEmployeeListReady();
+
+        WebElement row =
+                findEmployeeRowByText(
+                        firstName,
+                        20
+                );
+
+        if (row == null) {
+
+            throw new RuntimeException(
+                    "Employee not found for deletion: "
+                            + firstName
+            );
+        }
+
+        scrollIntoView(row);
+
+        By deleteButton =
+                By.xpath(
+                        ".//button[contains(@class,'oxd-icon-button')]" +
+                        "[.//i[contains(@class,'bi-trash')]]"
+                );
+
+        WebElement delete =
+                row.findElement(deleteButton);
+
+        wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        delete
+                )
+        );
+
+        delete.click();
+
+        By yesDeleteButton =
+                By.xpath(
+                        "//button[normalize-space()='Yes, Delete']"
+                );
+
+        WebElement yesDelete =
+                wait.until(
+                        ExpectedConditions.elementToBeClickable(
+                                yesDeleteButton
+                        )
+                );
+
+        yesDelete.click();
 
         waitForLoaderToDisappear();
 
         sleep(1000);
 
-        List<WebElement> rows =
-                driver.findElements(
-                        tableRows
-                );
-
-        for (WebElement row : rows) {
-
-            try {
-
-                if (!row.isDisplayed()) {
-                    continue;
-                }
-
-                String rowText =
-                        normalizeText(
-                                row.getText()
-                        );
-
-                if (rowText
-                        .toLowerCase()
-                        .contains(
-                                firstName.toLowerCase()
-                        )) {
-
-                    scrollIntoView(row);
-
-                    By deleteButton =
-                            By.xpath(
-                                    ".//button[contains(@class,'oxd-icon-button')]" +
-                                    "[.//i[contains(@class,'bi-trash')]]"
-                            );
-
-                    WebElement delete =
-                            row.findElement(
-                                    deleteButton
-                            );
-
-                    wait.until(
-                            ExpectedConditions.elementToBeClickable(
-                                    delete
-                            )
-                    );
-
-                    delete.click();
-
-                    By yesDeleteButton =
-                            By.xpath(
-                                    "//button[normalize-space()='Yes, Delete']"
-                            );
-
-                    WebElement yesDelete =
-                            wait.until(
-                                    ExpectedConditions.elementToBeClickable(
-                                            yesDeleteButton
-                                    )
-                            );
-
-                    yesDelete.click();
-
-                    waitForLoaderToDisappear();
-
-                    sleep(1000);
-
-                    System.out.println(
-                            "Employee deleted successfully."
-                    );
-
-                    return;
-                }
-
-            } catch (Exception e) {
-
-                // Continue
-            }
-        }
-
-        throw new RuntimeException(
-                "Employee not found for deletion: "
-                        + firstName
+        System.out.println(
+                "Employee deleted successfully."
         );
     }
 
@@ -2051,10 +1776,6 @@ public class EmployeePage {
                     )
             );
 
-            System.out.println(
-                    "Form loader disappeared successfully."
-            );
-
         } catch (Exception e) {
 
             System.out.println(
@@ -2097,7 +1818,6 @@ public class EmployeePage {
             String text) {
 
         if (text == null) {
-
             return "";
         }
 
@@ -2116,9 +1836,7 @@ public class EmployeePage {
 
         try {
 
-            Thread.sleep(
-                    milliseconds
-            );
+            Thread.sleep(milliseconds);
 
         } catch (InterruptedException e) {
 
