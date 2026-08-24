@@ -91,40 +91,48 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // CAPTURE EMPLOYEE ID
+        // CAPTURE EMPLOYEE NUMBER
         // ========================================================
 
-        System.out.println();
-        System.out.println(
-                "================================================"
-        );
-        System.out.println(
-                "CAPTURING CREATED EMPLOYEE ID"
-        );
-        System.out.println(
-                "================================================"
-        );
-
-        String employeeId =
+        String employeeNumber =
                 employeePage.getCurrentEmployeeId();
 
         Assert.assertNotNull(
-                employeeId,
-                "Created Employee ID should not be null."
+                employeeNumber,
+                "Generated Employee Number should not be null."
         );
 
         Assert.assertFalse(
-                employeeId.trim().isEmpty(),
-                "Created Employee ID should not be empty."
+                employeeNumber.trim().isEmpty(),
+                "Generated Employee Number should not be empty."
         );
 
         System.out.println(
-                "Created Employee ID: "
-                        + employeeId
+                "Created Employee Number: "
+                        + employeeNumber
         );
 
         // ========================================================
-        // OPEN CREATED EMPLOYEE DIRECTLY BY EMPLOYEE ID
+        // VERIFY CREATED EMPLOYEE
+        // ========================================================
+
+        boolean employeeExists =
+                employeePage.verifyEmployeeExistsByEmpNumber(
+                        employeeNumber
+                );
+
+        Assert.assertTrue(
+                employeeExists,
+                "Created employee was not found using Employee Number: "
+                        + employeeNumber
+        );
+
+        System.out.println(
+                "Created employee verified successfully in UI."
+        );
+
+        // ========================================================
+        // NAVIGATE TO EMPLOYEE LIST
         // ========================================================
 
         System.out.println();
@@ -132,14 +140,36 @@ public class EmployeeUpdateTest extends BaseTest {
                 "================================================"
         );
         System.out.println(
-                "OPENING CREATED EMPLOYEE BY ID"
+                "NAVIGATING TO EMPLOYEE LIST"
         );
         System.out.println(
                 "================================================"
         );
 
-        employeePage.clickEditEmployeeById(
-                employeeId
+        employeePage.clickPIM();
+        employeePage.clickEmployeeList();
+
+        System.out.println(
+                "Employee List opened successfully."
+        );
+
+        // ========================================================
+        // SEARCH CREATED EMPLOYEE AND OPEN EDIT
+        // ========================================================
+
+        System.out.println();
+        System.out.println(
+                "================================================"
+        );
+        System.out.println(
+                "SEARCHING CREATED EMPLOYEE FOR EDIT"
+        );
+        System.out.println(
+                "================================================"
+        );
+
+        employeePage.clickEditEmployee(
+                firstName
         );
 
         System.out.println(
@@ -209,34 +239,32 @@ public class EmployeeUpdateTest extends BaseTest {
         System.out.println(
                 "================================================"
         );
-
         System.out.println(
                 "EMPLOYEE UPDATE TEST PASSED"
         );
-
         System.out.println(
                 "================================================"
         );
 
         System.out.println(
-                "Employee ID       : "
-                        + employeeId
+                "Employee Number    : "
+                        + employeeNumber
         );
 
         System.out.println(
-                "Original Name     : "
+                "Original Name      : "
                         + firstName + " "
                         + middleName + " "
                         + lastName
         );
 
         System.out.println(
-                "Updated First Name: "
+                "Updated First Name : "
                         + updatedFirstName
         );
 
         System.out.println(
-                "Updated Last Name : "
+                "Updated Last Name  : "
                         + updatedLastName
         );
 
