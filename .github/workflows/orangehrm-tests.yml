@@ -1,3 +1,4 @@
+```yaml
 name: OrangeHRM Automation Tests
 
 on:
@@ -18,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout source code
         uses: actions/checkout@v7
 
@@ -31,10 +33,31 @@ jobs:
       - name: Run Maven Tests
         run: mvn clean test
 
-      - name: Upload Test Reports and Screenshots
+      - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: orangehrm-test-reports
-          path: test-output/
+          name: orangehrm-html-test-reports
+          path: |
+            test-output/*.html
+            test-output/*.xml
           if-no-files-found: warn
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: orangehrm-test-screenshots
+          path: |
+            test-output/screenshots/
+            screenshots/
+          if-no-files-found: warn
+
+      - name: Upload Videos
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: orangehrm-test-videos
+          path: videos/
+          if-no-files-found: warn
+```
