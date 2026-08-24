@@ -219,6 +219,7 @@ public class EmployeePage {
     // =========================================================
     // CREATE EMPLOYEE - 3 PARAMETERS
     // =========================================================
+
     public void createEmployee(
             String firstName,
             String middleName,
@@ -308,20 +309,68 @@ public class EmployeePage {
         // SAVE
         // -----------------------------------------------------
 
+        System.out.println(
+                "Waiting for employee form loader to disappear..."
+        );
+
         waitForLoaderToDisappear();
 
         WebElement save =
                 wait.until(
-                        ExpectedConditions.elementToBeClickable(
+                        ExpectedConditions.presenceOfElementLocated(
                                 saveButton
                         )
                 );
 
         scrollIntoView(save);
 
+        wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        save
+                )
+        );
+
+        // -----------------------------------------------------
+        // FINAL LOADER CHECK
+        // -----------------------------------------------------
+
+        wait.until(
+                ExpectedConditions.invisibilityOfElementLocated(
+                        loader
+                )
+        );
+
         sleep(500);
 
-        save.click();
+        System.out.println(
+                "Employee Save button is ready to click."
+        );
+
+        try {
+
+            save.click();
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Normal Save click failed. "
+                            + "Retrying after loader wait..."
+            );
+
+            wait.until(
+                    ExpectedConditions.invisibilityOfElementLocated(
+                            loader
+                    )
+            );
+
+            wait.until(
+                    ExpectedConditions.elementToBeClickable(
+                            save
+                    )
+            );
+
+            save.click();
+        }
 
         System.out.println(
                 "Employee Save button clicked."
@@ -477,17 +526,6 @@ public class EmployeePage {
     // =========================================================
     // VERIFY EMPLOYEE EXISTS BY ID
     // =========================================================
-    //
-    // NOTE:
-    // This method is retained for existing tests.
-    //
-    // Direct personal-details URL requires EMP NUMBER,
-    // not Employee ID.
-    //
-    // For delete test use:
-    // verifyEmployeeExistsByEmpNumber()
-    //
-    // =========================================================
 
     public boolean verifyEmployeeExistsById(
             String employeeId) {
@@ -519,8 +557,6 @@ public class EmployeePage {
             employeeId =
                     employeeId.trim();
 
-            // This method should only be used when the
-            // supplied value is actually the internal empNumber.
             openEmployeeById(employeeId);
 
             String currentUrl =
@@ -584,23 +620,6 @@ public class EmployeePage {
     // =========================================================
     // VERIFY EMPLOYEE EXISTS BY EMP NUMBER
     // =========================================================
-    //
-    // IMPORTANT:
-    //
-    // OrangeHRM URL:
-    //
-    // /viewPersonalDetails/empNumber/{empNumber}
-    //
-    // Example:
-    //
-    // employeeId  = 0382
-    // empNumber   = 179
-    //
-    // Correct URL:
-    //
-    // /viewPersonalDetails/empNumber/179
-    //
-    // =========================================================
 
     public boolean verifyEmployeeExistsByEmpNumber(
             String empNumber) {
@@ -632,10 +651,6 @@ public class EmployeePage {
             empNumber =
                     empNumber.trim();
 
-            // -------------------------------------------------
-            // OPEN USING INTERNAL EMP NUMBER
-            // -------------------------------------------------
-
             openEmployeeById(empNumber);
 
             String currentUrl =
@@ -646,10 +661,6 @@ public class EmployeePage {
                             + currentUrl
             );
 
-            // -------------------------------------------------
-            // VERIFY CORRECT URL
-            // -------------------------------------------------
-
             if (!currentUrl.contains(
                     "/pim/viewPersonalDetails/empNumber/"
                             + empNumber)) {
@@ -657,20 +668,12 @@ public class EmployeePage {
                 return false;
             }
 
-            // -------------------------------------------------
-            // VERIFY FIRST NAME FIELD
-            // -------------------------------------------------
-
             WebElement firstName =
                     wait.until(
                             ExpectedConditions.visibilityOfElementLocated(
                                     firstNameField
                             )
                     );
-
-            // -------------------------------------------------
-            // VERIFY LAST NAME FIELD
-            // -------------------------------------------------
 
             WebElement lastName =
                     wait.until(
@@ -1882,16 +1885,22 @@ public class EmployeePage {
 
             new WebDriverWait(
                     driver,
-                    Duration.ofSeconds(10)
+                    Duration.ofSeconds(30)
             ).until(
                     ExpectedConditions.invisibilityOfElementLocated(
                             loader
                     )
             );
 
+            System.out.println(
+                    "Form loader disappeared successfully."
+            );
+
         } catch (Exception e) {
 
-            // Loader can disappear before wait starts.
+            System.out.println(
+                    "Form loader wait completed/loader not present."
+            );
         }
     }
 
