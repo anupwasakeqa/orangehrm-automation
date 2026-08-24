@@ -20,14 +20,17 @@ public class EmployeeUpdateTest extends BaseTest {
         // LOGIN
         // ========================================================
 
-        LoginPage loginPage = new LoginPage(driver);
+        LoginPage loginPage =
+                new LoginPage(driver);
 
         loginPage.login(
                 getUsername(),
                 getPassword()
         );
 
-        System.out.println("Login successful.");
+        System.out.println(
+                "Login successful."
+        );
 
         // ========================================================
         // EMPLOYEE PAGE
@@ -41,8 +44,9 @@ public class EmployeeUpdateTest extends BaseTest {
         // ========================================================
 
         String uniqueValue =
-                String.valueOf(System.currentTimeMillis())
-                        .substring(8);
+                String.valueOf(
+                        System.currentTimeMillis()
+                ).substring(8);
 
         String firstName =
                 "Anup" + uniqueValue;
@@ -87,12 +91,7 @@ public class EmployeeUpdateTest extends BaseTest {
         );
 
         // ========================================================
-        // IMPORTANT:
-        // CREATE EMPLOYEE MAY LEAVE THE BROWSER ON
-        // /pim/addEmployee.
-        //
-        // Explicitly navigate back to Employee List
-        // before searching for the newly created employee.
+        // CAPTURE EMPLOYEE ID
         // ========================================================
 
         System.out.println();
@@ -100,22 +99,32 @@ public class EmployeeUpdateTest extends BaseTest {
                 "================================================"
         );
         System.out.println(
-                "NAVIGATING TO EMPLOYEE LIST"
+                "CAPTURING CREATED EMPLOYEE ID"
         );
         System.out.println(
                 "================================================"
         );
 
-        employeePage.clickPIM();
+        String employeeId =
+                employeePage.getCurrentEmployeeId();
 
-        employeePage.clickEmployeeList();
+        Assert.assertNotNull(
+                employeeId,
+                "Created Employee ID should not be null."
+        );
+
+        Assert.assertFalse(
+                employeeId.trim().isEmpty(),
+                "Created Employee ID should not be empty."
+        );
 
         System.out.println(
-                "Employee List opened successfully."
+                "Created Employee ID: "
+                        + employeeId
         );
 
         // ========================================================
-        // OPEN EMPLOYEE FOR EDIT
+        // OPEN CREATED EMPLOYEE DIRECTLY BY EMPLOYEE ID
         // ========================================================
 
         System.out.println();
@@ -123,14 +132,14 @@ public class EmployeeUpdateTest extends BaseTest {
                 "================================================"
         );
         System.out.println(
-                "SEARCHING CREATED EMPLOYEE FOR EDIT"
+                "OPENING CREATED EMPLOYEE BY ID"
         );
         System.out.println(
                 "================================================"
         );
 
-        employeePage.clickEditEmployee(
-                firstName
+        employeePage.clickEditEmployeeById(
+                employeeId
         );
 
         System.out.println(
@@ -200,11 +209,18 @@ public class EmployeeUpdateTest extends BaseTest {
         System.out.println(
                 "================================================"
         );
+
         System.out.println(
                 "EMPLOYEE UPDATE TEST PASSED"
         );
+
         System.out.println(
                 "================================================"
+        );
+
+        System.out.println(
+                "Employee ID       : "
+                        + employeeId
         );
 
         System.out.println(
