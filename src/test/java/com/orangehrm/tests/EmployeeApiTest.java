@@ -8,6 +8,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
@@ -64,9 +65,38 @@ public class EmployeeApiTest {
     @BeforeMethod
     public void setUp() {
 
-        driver = new ChromeDriver();
+        System.out.println("================================================");
+        System.out.println("TEST SETUP STARTED");
+        System.out.println("================================================");
 
-        driver.manage().window().maximize();
+        ChromeOptions options = new ChromeOptions();
+
+        String ciEnvironment = System.getenv("CI");
+
+        if ("true".equalsIgnoreCase(ciEnvironment)) {
+
+            System.out.println("CI environment detected.");
+            System.out.println("Running Chrome in headless mode.");
+
+            options.addArguments("--headless=new");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--disable-gpu");
+            options.addArguments("--window-size=1920,1080");
+
+        } else {
+
+            System.out.println("Local environment detected.");
+            System.out.println("Running Chrome in normal mode.");
+
+            options.addArguments("--start-maximized");
+        }
+
+        driver = new ChromeDriver(options);
+
+        if (!"true".equalsIgnoreCase(ciEnvironment)) {
+            driver.manage().window().maximize();
+        }
 
         wait = new WebDriverWait(
                 driver,
