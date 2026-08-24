@@ -5,6 +5,7 @@ import static io.restassured.RestAssured.given;
 import java.time.Duration;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -25,6 +26,7 @@ public class EmployeeApiTest {
      * ThreadLocal is important because TestNG is running tests in parallel.
      * Each test gets its own WebDriver instance.
      */
+
     private ThreadLocal<WebDriver> driverThreadLocal =
             new ThreadLocal<>();
 
@@ -45,14 +47,22 @@ public class EmployeeApiTest {
 
     private static final String UPDATE_PERSONAL_DETAILS_API =
             BASE_URL
-            + "/web/index.php/api/v2/pim/employees/{employeeNumber}/personal-details";
+                    + "/web/index.php/api/v2/pim/employees/{employeeNumber}/personal-details";
 
-    private static final String USERNAME = "Admin";
-    private static final String PASSWORD = "admin123";
+    private static final String USERNAME =
+            "Admin";
 
-    private static final String FIRST_NAME = "Anup";
-    private static final String MIDDLE_NAME = "Test";
-    private static final String LAST_NAME = "Employee";
+    private static final String PASSWORD =
+            "admin123";
+
+    private static final String FIRST_NAME =
+            "Anup";
+
+    private static final String MIDDLE_NAME =
+            "Test";
+
+    private static final String LAST_NAME =
+            "Employee";
 
     private static final String UPDATED_FIRST_NAME =
             "AnupUpdated";
@@ -63,7 +73,6 @@ public class EmployeeApiTest {
     private static final String UPDATED_LAST_NAME =
             "EmployeeUpdated";
 
-
     // =========================================================
     // DRIVER
     // =========================================================
@@ -72,7 +81,6 @@ public class EmployeeApiTest {
 
         return driverThreadLocal.get();
     }
-
 
     // =========================================================
     // WAIT
@@ -83,7 +91,6 @@ public class EmployeeApiTest {
         return waitThreadLocal.get();
     }
 
-
     // =========================================================
     // COOKIE
     // =========================================================
@@ -93,7 +100,6 @@ public class EmployeeApiTest {
         return orangeHrmCookieThreadLocal.get();
     }
 
-
     // =========================================================
     // SETUP
     // =========================================================
@@ -101,43 +107,136 @@ public class EmployeeApiTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
 
+        System.out.println(
+                "================================================"
+        );
+
+        System.out.println(
+                "EMPLOYEE API TEST SETUP STARTED"
+        );
+
+        System.out.println(
+                "================================================"
+        );
+
         ChromeOptions options =
                 new ChromeOptions();
 
+        // =====================================================
+        // PAGE LOAD STRATEGY
+        // =====================================================
+
         /*
-         * GitHub Actions / CI environment
+         * IMPORTANT:
+         *
+         * OrangeHRM is a JavaScript SPA.
+         * EAGER prevents Selenium from waiting unnecessarily
+         * for all renderer/network activity.
          */
-        if (System.getenv("CI") != null) {
+        options.setPageLoadStrategy(
+                PageLoadStrategy.EAGER
+        );
+
+        // =====================================================
+        // GITHUB ACTIONS / CI ENVIRONMENT
+        // =====================================================
+
+        String ci =
+                System.getenv("CI");
+
+        if ("true".equalsIgnoreCase(ci)) {
 
             System.out.println(
                     "CI environment detected."
             );
 
-            options.addArguments("--headless=new");
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080");
+            options.addArguments(
+                    "--headless=new"
+            );
+
+            options.addArguments(
+                    "--no-sandbox"
+            );
+
+            options.addArguments(
+                    "--disable-dev-shm-usage"
+            );
+
+            options.addArguments(
+                    "--disable-gpu"
+            );
+
+            options.addArguments(
+                    "--window-size=1920,1080"
+            );
+
+            options.addArguments(
+                    "--disable-software-rasterizer"
+            );
+
+            options.addArguments(
+                    "--disable-extensions"
+            );
+
+            options.addArguments(
+                    "--disable-background-networking"
+            );
+
+            options.addArguments(
+                    "--disable-background-timer-throttling"
+            );
+
+            options.addArguments(
+                    "--disable-renderer-backgrounding"
+            );
+
+            options.addArguments(
+                    "--disable-features=Translate,BackForwardCache"
+            );
 
             System.out.println(
-                    "Running Chrome in headless mode."
+                    "Running Chrome in headless CI mode."
             );
-        }
 
-        /*
-         * Local environment
-         */
-        else {
+        } else {
 
             System.out.println(
                     "Local environment detected."
             );
         }
 
+        // =====================================================
+        // COMMON CHROME OPTIONS
+        // =====================================================
+
+        options.addArguments(
+                "--disable-notifications"
+        );
+
+        options.addArguments(
+                "--disable-popup-blocking"
+        );
+
+        options.addArguments(
+                "--remote-allow-origins=*"
+        );
+
+        options.addArguments(
+                "--disable-infobars"
+        );
+
+        // =====================================================
+        // CREATE DRIVER
+        // =====================================================
+
         WebDriver driver =
                 new ChromeDriver(options);
 
         driverThreadLocal.set(driver);
+
+        // =====================================================
+        // WAIT
+        // =====================================================
 
         WebDriverWait wait =
                 new WebDriverWait(
@@ -147,25 +246,47 @@ public class EmployeeApiTest {
 
         waitThreadLocal.set(wait);
 
+        // =====================================================
+        // TIMEOUTS
+        // =====================================================
+
+        driver.manage()
+                .timeouts()
+                .implicitlyWait(
+                        Duration.ofSeconds(5)
+                );
+
         driver.manage()
                 .timeouts()
                 .pageLoadTimeout(
-                        Duration.ofSeconds(60)
+                        Duration.ofSeconds(45)
                 );
 
-        /*
-         * Maximize only when running locally.
-         */
-        if (System.getenv("CI") == null) {
+        // =====================================================
+        // WINDOW
+        // =====================================================
+
+        if (!"true".equalsIgnoreCase(ci)) {
 
             driver.manage()
                     .window()
                     .maximize();
         }
 
-        openLoginPage();
-    }
+        // =====================================================
+        // OPEN LOGIN PAGE
+        // =====================================================
 
+        openLoginPage();
+
+        System.out.println(
+                "EMPLOYEE API TEST SETUP COMPLETED"
+        );
+
+        System.out.println(
+                "================================================"
+        );
+    }
 
     // =========================================================
     // TEARDOWN
@@ -195,11 +316,12 @@ public class EmployeeApiTest {
         } finally {
 
             driverThreadLocal.remove();
+
             waitThreadLocal.remove();
+
             orangeHrmCookieThreadLocal.remove();
         }
     }
-
 
     // =========================================================
     // OPEN LOGIN PAGE
@@ -217,25 +339,79 @@ public class EmployeeApiTest {
                 "Opening OrangeHRM login page..."
         );
 
-        driver.get(LOGIN_URL);
+        int maxAttempts = 3;
 
-        wait.until(
-                ExpectedConditions.urlContains(
-                        "/auth/login"
-                )
-        );
+        for (int attempt = 1;
+                attempt <= maxAttempts;
+                attempt++) {
 
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        By.name("username")
-                )
-        );
+            try {
 
-        System.out.println(
-                "OrangeHRM login page loaded."
-        );
+                System.out.println(
+                        "Login page navigation attempt "
+                                + attempt
+                                + " of "
+                                + maxAttempts
+                );
+
+                driver.get(LOGIN_URL);
+
+                /*
+                 * EAGER strategy returns after DOMContentLoaded.
+                 * Now explicitly wait for the actual login field.
+                 */
+
+                wait.until(
+                        ExpectedConditions.visibilityOfElementLocated(
+                                By.name("username")
+                        )
+                );
+
+                System.out.println(
+                        "OrangeHRM login page loaded."
+                );
+
+                System.out.println(
+                        "Current URL: "
+                                + driver.getCurrentUrl()
+                );
+
+                return;
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Login page navigation attempt "
+                                + attempt
+                                + " failed."
+                );
+
+                System.out.println(
+                        "Navigation error: "
+                                + e.getMessage()
+                );
+
+                if (attempt == maxAttempts) {
+
+                    throw e;
+                }
+
+                try {
+
+                    Thread.sleep(2000);
+
+                } catch (InterruptedException interruptedException) {
+
+                    Thread.currentThread().interrupt();
+
+                    throw new RuntimeException(
+                            "Thread interrupted during login page retry.",
+                            interruptedException
+                    );
+                }
+            }
+        }
     }
-
 
     // =========================================================
     // LOGIN
@@ -278,7 +454,10 @@ public class EmployeeApiTest {
                         );
 
                 usernameField.clear();
-                usernameField.sendKeys(USERNAME);
+
+                usernameField.sendKeys(
+                        USERNAME
+                );
 
                 WebElement passwordField =
                         wait.until(
@@ -290,7 +469,10 @@ public class EmployeeApiTest {
                         );
 
                 passwordField.clear();
-                passwordField.sendKeys(PASSWORD);
+
+                passwordField.sendKeys(
+                        PASSWORD
+                );
 
                 WebElement loginButton =
                         wait.until(
@@ -322,15 +504,30 @@ public class EmployeeApiTest {
 
                 System.out.println(
                         "Login attempt "
-                        + attempt
-                        + " failed. Retrying..."
+                                + attempt
+                                + " failed. Retrying..."
                 );
+
+                try {
+
+                    Thread.sleep(1500);
+
+                } catch (InterruptedException interruptedException) {
+
+                    Thread.currentThread().interrupt();
+
+                    throw new RuntimeException(
+                            "Thread interrupted during login retry.",
+                            interruptedException
+                    );
+                }
             }
         }
 
-        /*
-         * Wait for OrangeHRM cookie.
-         */
+        // =====================================================
+        // WAIT FOR ORANGEHRM COOKIE
+        // =====================================================
+
         wait.until(
                 driverInstance ->
                         driverInstance
@@ -357,7 +554,6 @@ public class EmployeeApiTest {
         );
     }
 
-
     // =========================================================
     // CREATE EMPLOYEE API
     // =========================================================
@@ -369,31 +565,30 @@ public class EmployeeApiTest {
 
         String requestBody =
                 "{"
-                + "\"firstName\":\"" + firstName + "\","
-                + "\"middleName\":\"" + middleName + "\","
-                + "\"lastName\":\"" + lastName + "\""
-                + "}";
+                        + "\"firstName\":\"" + firstName + "\","
+                        + "\"middleName\":\"" + middleName + "\","
+                        + "\"lastName\":\"" + lastName + "\""
+                        + "}";
 
         return
                 given()
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .header(
-                            "X-Requested-With",
-                            "XMLHttpRequest"
-                    )
-                    .cookie(
-                            "orangehrm",
-                            getOrangeHrmCookie()
-                    )
-                    .body(requestBody)
+                        .contentType(ContentType.JSON)
+                        .accept(ContentType.JSON)
+                        .header(
+                                "X-Requested-With",
+                                "XMLHttpRequest"
+                        )
+                        .cookie(
+                                "orangehrm",
+                                getOrangeHrmCookie()
+                        )
+                        .body(requestBody)
                 .when()
-                    .post(EMPLOYEE_API)
+                        .post(EMPLOYEE_API)
                 .then()
-                    .extract()
-                    .response();
+                        .extract()
+                        .response();
     }
-
 
     // =========================================================
     // GET ALL EMPLOYEES API
@@ -403,22 +598,21 @@ public class EmployeeApiTest {
 
         return
                 given()
-                    .accept(ContentType.JSON)
-                    .header(
-                            "X-Requested-With",
-                            "XMLHttpRequest"
-                    )
-                    .cookie(
-                            "orangehrm",
-                            getOrangeHrmCookie()
-                    )
+                        .accept(ContentType.JSON)
+                        .header(
+                                "X-Requested-With",
+                                "XMLHttpRequest"
+                        )
+                        .cookie(
+                                "orangehrm",
+                                getOrangeHrmCookie()
+                        )
                 .when()
-                    .get(EMPLOYEE_API)
+                        .get(EMPLOYEE_API)
                 .then()
-                    .extract()
-                    .response();
+                        .extract()
+                        .response();
     }
-
 
     // =========================================================
     // GET SINGLE EMPLOYEE API
@@ -429,26 +623,25 @@ public class EmployeeApiTest {
 
         return
                 given()
-                    .accept(ContentType.JSON)
-                    .header(
-                            "X-Requested-With",
-                            "XMLHttpRequest"
-                    )
-                    .cookie(
-                            "orangehrm",
-                            getOrangeHrmCookie()
-                    )
+                        .accept(ContentType.JSON)
+                        .header(
+                                "X-Requested-With",
+                                "XMLHttpRequest"
+                        )
+                        .cookie(
+                                "orangehrm",
+                                getOrangeHrmCookie()
+                        )
                 .when()
-                    .get(
-                            EMPLOYEE_API
-                            + "/"
-                            + employeeNumber
-                    )
+                        .get(
+                                EMPLOYEE_API
+                                        + "/"
+                                        + employeeNumber
+                        )
                 .then()
-                    .extract()
-                    .response();
+                        .extract()
+                        .response();
     }
-
 
     // =========================================================
     // UPDATE EMPLOYEE API
@@ -463,16 +656,16 @@ public class EmployeeApiTest {
 
         String requestBody =
                 "{"
-                + "\"lastName\":\"" + lastName + "\","
-                + "\"firstName\":\"" + firstName + "\","
-                + "\"middleName\":\"" + middleName + "\","
-                + "\"employeeId\":\"" + employeeId + "\","
-                + "\"otherId\":\"\","
-                + "\"drivingLicenseNo\":\"\","
-                + "\"drivingLicenseExpiredDate\":null,"
-                + "\"gender\":null,"
-                + "\"birthday\":null"
-                + "}";
+                        + "\"lastName\":\"" + lastName + "\","
+                        + "\"firstName\":\"" + firstName + "\","
+                        + "\"middleName\":\"" + middleName + "\","
+                        + "\"employeeId\":\"" + employeeId + "\","
+                        + "\"otherId\":\"\","
+                        + "\"drivingLicenseNo\":\"\","
+                        + "\"drivingLicenseExpiredDate\":null,"
+                        + "\"gender\":null,"
+                        + "\"birthday\":null"
+                        + "}";
 
         String updateUrl =
                 UPDATE_PERSONAL_DETAILS_API.replace(
@@ -506,24 +699,23 @@ public class EmployeeApiTest {
 
         return
                 given()
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .header(
-                            "X-Requested-With",
-                            "XMLHttpRequest"
-                    )
-                    .cookie(
-                            "orangehrm",
-                            getOrangeHrmCookie()
-                    )
-                    .body(requestBody)
+                        .contentType(ContentType.JSON)
+                        .accept(ContentType.JSON)
+                        .header(
+                                "X-Requested-With",
+                                "XMLHttpRequest"
+                        )
+                        .cookie(
+                                "orangehrm",
+                                getOrangeHrmCookie()
+                        )
+                        .body(requestBody)
                 .when()
-                    .put(updateUrl)
+                        .put(updateUrl)
                 .then()
-                    .extract()
-                    .response();
+                        .extract()
+                        .response();
     }
-
 
     // =========================================================
     // TEST 1 - GET ALL EMPLOYEES
@@ -539,7 +731,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "GET ALL EMPLOYEES STATUS: "
-                + response.statusCode()
+                        + response.statusCode()
         );
 
         Assert.assertEquals(
@@ -552,7 +744,6 @@ public class EmployeeApiTest {
                 "GET ALL EMPLOYEES TEST PASSED"
         );
     }
-
 
     // =========================================================
     // TEST 2 - GET SINGLE EMPLOYEE
@@ -586,7 +777,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "Employee Number: "
-                + employeeNumber
+                        + employeeNumber
         );
 
         Response response =
@@ -604,7 +795,6 @@ public class EmployeeApiTest {
                 "GET SINGLE EMPLOYEE TEST PASSED"
         );
     }
-
 
     // =========================================================
     // TEST 3 - CREATE EMPLOYEE
@@ -639,7 +829,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "CREATE EMPLOYEE STATUS: "
-                + response.statusCode()
+                        + response.statusCode()
         );
 
         System.out.println(
@@ -672,7 +862,6 @@ public class EmployeeApiTest {
                 "CREATE EMPLOYEE TEST PASSED"
         );
     }
-
 
     // =========================================================
     // TEST 4 - CREATE + UPDATE + GET VERIFY
@@ -711,7 +900,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "CREATE STATUS: "
-                + createResponse.statusCode()
+                        + createResponse.statusCode()
         );
 
         System.out.println(
@@ -746,7 +935,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "Internal Employee Number: "
-                + employeeNumber
+                        + employeeNumber
         );
 
         // -----------------------------------------------------
@@ -766,14 +955,14 @@ public class EmployeeApiTest {
 
             System.out.println(
                     "Employee ID returned as null. "
-                    + "Using empty value for PUT payload."
+                            + "Using empty value for PUT payload."
             );
 
         } else {
 
             System.out.println(
                     "Employee ID: "
-                    + employeeId
+                            + employeeId
             );
         }
 
@@ -792,7 +981,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "PUT STATUS: "
-                + updateResponse.statusCode()
+                        + updateResponse.statusCode()
         );
 
         System.out.println(
@@ -820,7 +1009,7 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "GET AFTER UPDATE STATUS: "
-                + getResponse.statusCode()
+                        + getResponse.statusCode()
         );
 
         System.out.println(
@@ -902,22 +1091,22 @@ public class EmployeeApiTest {
 
         System.out.println(
                 "Employee Number: "
-                + employeeNumber
+                        + employeeNumber
         );
 
         System.out.println(
                 "Updated First Name: "
-                + actualFirstName
+                        + actualFirstName
         );
 
         System.out.println(
                 "Updated Middle Name: "
-                + actualMiddleName
+                        + actualMiddleName
         );
 
         System.out.println(
                 "Updated Last Name: "
-                + actualLastName
+                        + actualLastName
         );
 
         System.out.println(

@@ -15,7 +15,6 @@ import com.orangehrm.listeners.TestListener;
 import com.orangehrm.utils.ConfigReader;
 
 @Listeners(TestListener.class)
-
 public class BaseTest {
 
     protected WebDriver driver;
@@ -55,7 +54,7 @@ public class BaseTest {
         int implicitWait =
                 ConfigReader.getInt("implicitWait");
 
-        int pageLoadTimeout =
+        int configuredPageLoadTimeout =
                 ConfigReader.getInt("pageLoadTimeout");
 
         System.out.println(
@@ -80,8 +79,8 @@ public class BaseTest {
         );
 
         System.out.println(
-                "Page Load Timeout  : "
-                        + pageLoadTimeout
+                "Configured Page Load Timeout : "
+                        + configuredPageLoadTimeout
                         + " seconds"
         );
 
@@ -89,8 +88,7 @@ public class BaseTest {
         // CREATE BROWSER
         // ========================================================
 
-        driver =
-                createDriver(browser);
+        driver = createDriver(browser);
 
         // ========================================================
         // SELENIUM TIMEOUTS
@@ -104,6 +102,20 @@ public class BaseTest {
                         )
                 );
 
+        /*
+         * Keep the page-load timeout controlled in CI.
+         *
+         * OrangeHRM is an SPA and Chrome renderer can sometimes
+         * remain busy even after the page is usable.
+         *
+         * The actual navigation strategy is "eager", so we don't
+         * wait unnecessarily for every resource.
+         */
+        int pageLoadTimeout =
+                configuredPageLoadTimeout > 60
+                        ? 60
+                        : configuredPageLoadTimeout;
+
         driver.manage()
                 .timeouts()
                 .pageLoadTimeout(
@@ -116,27 +128,7 @@ public class BaseTest {
         // OPEN APPLICATION
         // ========================================================
 
-        System.out.println(
-                "Opening OrangeHRM application..."
-        );
-
-        driver.get(
-                baseUrl
-        );
-
-        System.out.println(
-                "Application opened successfully."
-        );
-
-        System.out.println(
-                "Current URL: "
-                        + driver.getCurrentUrl()
-        );
-
-        System.out.println(
-                "Page Title: "
-                        + driver.getTitle()
-        );
+        openApplication(baseUrl);
 
         System.out.println(
                 "================================================"
@@ -144,11 +136,110 @@ public class BaseTest {
     }
 
     // ============================================================
+    // OPEN APPLICATION
+    // ============================================================
+
+    private void openApplication(String baseUrl) {
+
+        System.out.println(
+                "Opening OrangeHRM application..."
+        );
+
+        int maxAttempts = 3;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+
+            try {
+
+                System.out.println(
+                        "Navigation attempt "
+                                + attempt
+                                + " of "
+                                + maxAttempts
+                );
+
+                driver.get(baseUrl);
+
+                /*
+                 * With eager pageLoadStrategy, Selenium returns
+                 * once DOMContentLoaded is reached.
+                 *
+                 * Give the SPA a short moment to finish rendering.
+                 */
+                try {
+
+                    Thread.sleep(1500);
+
+                } catch (InterruptedException e) {
+
+                    Thread.currentThread().interrupt();
+
+                    throw new RuntimeException(
+                            "Thread interrupted while waiting for OrangeHRM.",
+                            e
+                    );
+                }
+
+                System.out.println(
+                        "Application opened successfully."
+                );
+
+                System.out.println(
+                        "Current URL: "
+                                + driver.getCurrentUrl()
+                );
+
+                System.out.println(
+                        "Page Title: "
+                                + driver.getTitle()
+                );
+
+                return;
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Navigation attempt "
+                                + attempt
+                                + " failed."
+                );
+
+                System.out.println(
+                        "Navigation error: "
+                                + e.getMessage()
+                );
+
+                if (attempt == maxAttempts) {
+
+                    throw e;
+                }
+
+                /*
+                 * Give Chrome/network a short recovery period
+                 * before trying again.
+                 */
+                try {
+
+                    Thread.sleep(2000);
+
+                } catch (InterruptedException interruptedException) {
+
+                    Thread.currentThread().interrupt();
+
+                    throw new RuntimeException(
+                            "Thread interrupted during navigation retry.",
+                            interruptedException
+                    );
+                }
+            }
+        }
+    }
+
+    // ============================================================
     // CREATE DRIVER
     // ============================================================
 
-    private WebDriver createDriver(
-            String browser) {
+    private WebDriver createDriver(String browser) {
 
         if (browser == null ||
                 browser.trim().isEmpty()) {
@@ -188,6 +279,24 @@ public class BaseTest {
                 new ChromeOptions();
 
         // ========================================================
+        // PAGE LOAD STRATEGY
+        // ========================================================
+
+        /*
+         * IMPORTANT:
+         *
+         * OrangeHRM is a JavaScript SPA.
+         * "normal" can make Chrome wait too long for renderer/network
+         * activity in GitHub Actions.
+         *
+         * "eager" waits until DOMContentLoaded and is much more
+         * stable for CI automation.
+         */
+        options.setPageLoadStrategy(
+                org.openqa.selenium.PageLoadStrategy.EAGER
+        );
+
+        // ========================================================
         // GITHUB ACTIONS / CI CONFIGURATION
         // ========================================================
 
@@ -223,6 +332,30 @@ public class BaseTest {
             options.addArguments(
                     "--window-size=1920,1080"
             );
+
+            options.addArguments(
+                    "--disable-software-rasterizer"
+            );
+
+            options.addArguments(
+                    "--disable-extensions"
+            );
+
+            options.addArguments(
+                    "--disable-background-networking"
+            );
+
+            options.addArguments(
+                    "--disable-background-timer-throttling"
+            );
+
+            options.addArguments(
+                    "--disable-renderer-backgrounding"
+            );
+
+            options.addArguments(
+                    "--disable-features=Translate,BackForwardCache"
+            );
         }
 
         // ========================================================
@@ -241,14 +374,15 @@ public class BaseTest {
                 "--remote-allow-origins=*"
         );
 
+        options.addArguments(
+                "--disable-infobars"
+        );
+
         /*
          * Selenium Manager automatically manages
          * the ChromeDriver.
          */
-
-        return new ChromeDriver(
-                options
-        );
+        return new ChromeDriver(options);
     }
 
     // ============================================================
