@@ -81,9 +81,13 @@ jobs:
         run: |
           mvn clean test
 
+      - name: Prepare k6 results directory
+        run: |
+          mkdir -p performance/k6/results
+
       - name: Run k6 Performance Test
         run: |
-          k6 run performance/k6/login.js
+          k6 run --out json=performance/k6/results/k6-results.json performance/k6/login.js
 
       - name: Stop screen recording
         if: always()
@@ -139,6 +143,14 @@ jobs:
         with:
           name: orangehrm-test-videos
           path: videos/
+          if-no-files-found: warn
+
+      - name: Upload k6 Performance Results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: orangehrm-k6-performance-results
+          path: performance/k6/results/k6-results.json
           if-no-files-found: warn
 
       - name: Upload Xvfb and FFmpeg logs
