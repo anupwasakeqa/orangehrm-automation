@@ -2,15 +2,15 @@
 
 [![GitHub Actions](https://github.com/anupwasakeqa/orangehrm-automation/actions/workflows/orangehrm-tests.yml/badge.svg)](https://github.com/anupwasakeqa/orangehrm-automation/actions)
 
-A Selenium-based test automation framework for the **OrangeHRM application**, built using **Java, Selenium WebDriver, TestNG, Maven, REST Assured, and Page Object Model (POM)**.
+A Selenium-based test automation framework for the **OrangeHRM application**, built using **Java, Selenium WebDriver, TestNG, Maven, REST Assured, k6, and Page Object Model (POM)**.
 
-The framework supports both **local test execution** and **CI execution through GitHub Actions**, with automated test reporting, failure screenshots, retry handling, and test artifacts.
+The framework supports local test execution as well as CI execution through GitHub Actions, with automated functional testing, API testing, performance testing, test reporting, failure screenshots, screen recording, retry handling, and CI artifacts.
 
 ---
 
 ## Project Overview
 
-This project automates functional UI and API test scenarios for the OrangeHRM application.
+This project automates functional UI, API, and performance test scenarios for the OrangeHRM application.
 
 The framework is designed with a focus on:
 
@@ -18,11 +18,15 @@ The framework is designed with a focus on:
 * Reusability
 * Test stability
 * Failure diagnostics
+* API validation
+* Performance validation
 * CI/CD execution
 * HTML test reporting
-* Performance testing
+* Automated test evidence
 
-### Key Features
+---
+
+## Key Features
 
 * Selenium WebDriver UI automation
 * Java-based automation framework
@@ -30,11 +34,13 @@ The framework is designed with a focus on:
 * Page Object Model (POM)
 * Maven dependency and build management
 * REST Assured API automation
+* k6 performance testing
 * Configurable QA environment
 * Chrome browser automation
 * Headless Chrome execution in GitHub Actions
 * Extent HTML reporting
 * Automatic failure screenshot capture
+* CI screen recording
 * Retry mechanism for failed tests
 * Smart explicit wait utilities
 * Failure URL and page title logging
@@ -43,37 +49,38 @@ The framework is designed with a focus on:
 * GitHub Actions CI automation
 * Automatic test execution on repository changes
 * CI test report and screenshot artifacts
-* k6 performance testing
+* CI video execution evidence
+* Performance test thresholds and checks
 
 ---
 
 ## Application Under Test
 
-| Property        | Details                                   |
-| --------------- | ----------------------------------------- |
-| **Application** | OrangeHRM Open Source Demo                |
-| **Base URL**    | https://opensource-demo.orangehrmlive.com |
-| **Environment** | QA                                        |
-| **Browser**     | Chrome                                    |
+| Property | Details |
+|---|---|
+| **Application** | OrangeHRM Open Source Demo |
+| **Base URL** | https://opensource-demo.orangehrmlive.com |
+| **Environment** | QA |
+| **Browser** | Chrome |
 
 ---
 
 ## Tech Stack
 
-| Technology         | Purpose                         |
-| ------------------ | ------------------------------- |
-| Java 17            | Programming language            |
-| Selenium WebDriver | UI automation                   |
-| TestNG             | Test framework and execution    |
-| Maven              | Build and dependency management |
-| REST Assured       | API automation                  |
-| Jackson            | JSON processing                 |
-| Extent Reports     | HTML test reporting             |
-| Git                | Version control                 |
-| GitHub             | Source code repository          |
-| GitHub Actions     | CI/CD automation                |
-| k6                | Performance testing             |
-| Eclipse             | Development IDE                 |
+| Technology | Purpose |
+|---|---|
+| Java 17 | Programming language |
+| Selenium WebDriver | UI automation |
+| TestNG | Test framework and execution |
+| Maven | Build and dependency management |
+| REST Assured | API automation |
+| Jackson | JSON processing |
+| k6 | Performance testing |
+| Extent Reports | HTML test reporting |
+| Git | Version control |
+| GitHub | Source code repository |
+| GitHub Actions | CI/CD automation |
+| Eclipse | Development IDE |
 
 ---
 
@@ -91,8 +98,8 @@ The framework follows the **Page Object Model (POM)** design pattern.
 * **Listeners** – Handle TestNG execution events, retry logic, reporting, and failure screenshots
 * **Utilities** – Provide reusable automation functions and smart waits
 * **TestNG Suite** – Controls test execution
-* **GitHub Actions** – Executes automated tests in CI
-* **k6 Scripts** – Execute performance and load testing scenarios
+* **k6 Scripts** – Execute performance and load validation
+* **GitHub Actions** – Executes automated tests in CI and publishes execution artifacts
 
 ---
 
@@ -112,7 +119,9 @@ The framework uses a custom TestNG `RetryAnalyzer` to handle transient test fail
 
 This helps identify whether a failure is transient or consistently reproducible.
 
-### Smart Waiting
+---
+
+## Smart Waiting
 
 The framework uses reusable explicit wait utilities to synchronize test execution with the application state.
 
@@ -129,7 +138,9 @@ The `WaitUtils` utility provides:
 
 Page Objects use these wait mechanisms to reduce timing-related failures and improve test execution reliability.
 
-### Failure Screenshot Capture
+---
+
+## Failure Screenshot Capture
 
 When a test fails, the TestNG listener automatically captures failure evidence.
 
@@ -144,7 +155,25 @@ The failure handling process includes:
 
 Screenshots are timestamped to make individual test executions easier to identify and troubleshoot.
 
-### Flaky Test Detection
+---
+
+## CI Screen Recording
+
+GitHub Actions uses a virtual display with **Xvfb** and screen recording with **FFmpeg**.
+
+The CI execution flow includes:
+
+1. Starting a virtual display
+2. Starting screen recording
+3. Executing the Maven test suite
+4. Stopping the recording
+5. Uploading the generated video as a GitHub Actions artifact
+
+The generated execution video provides additional evidence for debugging CI test failures.
+
+---
+
+## Flaky Test Detection
 
 A flaky test is a test that intermittently passes and fails without a corresponding change in the application or test code.
 
@@ -159,7 +188,9 @@ The framework identifies potential flaky tests using:
 
 If a test fails initially but passes after a retry, it is treated as a potential flaky test and should be investigated further rather than relying permanently on retries.
 
-### Flaky Test Mitigation Strategy
+---
+
+## Flaky Test Mitigation Strategy
 
 The framework follows the following practices to reduce flaky test failures:
 
@@ -187,6 +218,7 @@ The framework currently includes test coverage for:
 * Employee deletion
 * Employee API validation
 * Role validation
+* Login performance validation using k6
 
 ### Test Classes
 
