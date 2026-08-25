@@ -10,7 +10,7 @@ The framework covers UI functional testing, API testing, test stability, failure
 
 ## Project Objective
 
-The objective of this project is to automate an end-to-end employee lifecycle in OrangeHRM while demonstrating maintainable automation architecture, API validation, CI/CD integration, test reliability, reporting, and observability.
+The objective of this project is to automate an end-to-end employee lifecycle in OrangeHRM while demonstrating maintainable automation architecture, API validation, CI/CD integration, test reliability, and observability.
 
 ### Covered Areas
 
@@ -75,21 +75,17 @@ orangehrm-automation/
 │   │           ├── api/
 │   │           │   ├── ApiConstants.java
 │   │           │   └── EmployeeApi.java
-│   │           │
 │   │           ├── base/
 │   │           │   └── DriverFactory.java
-│   │           │
 │   │           ├── listeners/
 │   │           │   ├── RetryAnalyzer.java
 │   │           │   └── TestListener.java
-│   │           │
 │   │           ├── pages/
 │   │           │   ├── DashboardPage.java
 │   │           │   ├── EmployeePage.java
 │   │           │   ├── LoginPage.java
 │   │           │   ├── PIMPage.java
 │   │           │   └── RoleValidationPage.java
-│   │           │
 │   │           └── utils/
 │   │               ├── ConfigReader.java
 │   │               └── WaitUtils.java
@@ -104,7 +100,6 @@ orangehrm-automation/
 │       │       ├── EmployeeUpdateTest.java
 │       │       ├── LoginTest.java
 │       │       └── RoleValidationTest.java
-│       │
 │       └── resources/
 │           ├── config.properties
 │           └── config/qa.properties
@@ -119,3 +114,5 @@ orangehrm-automation/
 ├── pom.xml
 ├── testng.xml
 └── README.md
+
+
